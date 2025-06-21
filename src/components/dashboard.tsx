@@ -6,7 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { CheckCircle2, TrendingUp, Flame, Plus, Mic, MicOff, Trash2 } from 'lucide-react';
+import { CheckCircle2, TrendingUp, Flame, Plus, Mic, MicOff, Trash2, CalendarCheck } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -19,6 +19,7 @@ interface DashboardProps {
   tasks: Task[];
   goals: Goal[];
   momentumStreak: number;
+  dailyProgress: number;
   onToggleTask: (id: string) => void;
   onAddTask: (text: string) => void;
   onDeleteTask: (id: string) => void;
@@ -26,7 +27,7 @@ interface DashboardProps {
   onDeleteGoal: (id: string) => void;
 }
 
-export default function Dashboard({ tasks, goals, momentumStreak, onToggleTask, onAddTask, onDeleteTask, onAddNewGoal, onDeleteGoal }: DashboardProps) {
+export default function Dashboard({ tasks, goals, momentumStreak, dailyProgress, onToggleTask, onAddTask, onDeleteTask, onAddNewGoal, onDeleteGoal }: DashboardProps) {
   const [newTaskText, setNewTaskText] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
@@ -39,8 +40,6 @@ export default function Dashboard({ tasks, goals, momentumStreak, onToggleTask, 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      // We won't toast here anymore to avoid spamming users whose browsers don't support it.
-      // The button will just be disabled.
       return;
     }
 
@@ -185,6 +184,23 @@ export default function Dashboard({ tasks, goals, momentumStreak, onToggleTask, 
         </Card>
       </div>
       <div className="space-y-6">
+        <Card>
+            <CardHeader>
+                <div className="flex items-center gap-3">
+                    <CalendarCheck className="h-6 w-6 text-primary" />
+                    <CardTitle>Daily Summary</CardTitle>
+                </div>
+            </CardHeader>
+            <CardContent>
+                <div>
+                    <div className="mb-1 flex items-center justify-between">
+                        <p className="text-sm font-medium">Today's Progress</p>
+                        <p className="text-sm text-muted-foreground">{dailyProgress}%</p>
+                    </div>
+                    <Progress value={dailyProgress} aria-label="Daily task progress" />
+                </div>
+            </CardContent>
+        </Card>
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">

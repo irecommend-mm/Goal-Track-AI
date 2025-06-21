@@ -1,3 +1,5 @@
+import type { LucideIcon } from 'lucide-react';
+
 export interface Task {
   id: string;
   text: string;
@@ -9,4 +11,22 @@ export interface Goal {
   title: string;
   progress: number;
   type: 'weekly' | 'monthly';
+}
+
+export interface ProgressRecord {
+    date: string; // YYYY-MM-DD
+    progress: number;
+}
+
+export interface Achievement {
+    id: string;
+    name: string;
+    description: string;
+    icon: LucideIcon;
+    unlocked: boolean;
+}
+
+export interface UserStats {
+    level: number;
+    xp: number;
 }
