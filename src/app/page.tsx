@@ -18,22 +18,30 @@ const initialTasks: Task[] = [
 ];
 
 const initialGoals: Goal[] = [
-  { id: 'g1', title: 'Weekly Fitness Goal', progress: 60, type: 'weekly' },
-  { id: 'g2', title: 'Monthly Learning Goal', progress: 45, type: 'monthly' },
+  { id: 'g1', title: 'Weekly Fitness Goal', progress: 50, type: 'weekly' },
+  { id: 'g2', title: 'Monthly Learning Goal', progress: 50, type: 'monthly' },
 ];
 
 export default function Home() {
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
-  const [goals, setGoals] = useState<Goal[]>(initialGoals);
+  const [tasks, setTasks] = useLocalStorage<Task[]>('goal-track-ai-tasks', initialTasks);
+  const [goals, setGoals] = useLocalStorage<Goal[]>('goal-track-ai-goals', initialGoals);
   const [activeView, setActiveView] = useState<'dashboard' | 'review' | 'settings'>('dashboard');
   const [isOnboarded, setIsOnboarded] = useLocalStorage('goal-track-ai-onboarded', false);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [momentumStreak, setMomentumStreak] = useState(5);
+  const [momentumStreak, setMomentumStreak] = useLocalStorage('goal-track-ai-momentum', 5);
 
   useEffect(() => {
     // Only show onboarding on the client-side after checking local storage
     setShowOnboarding(!isOnboarded);
   }, [isOnboarded]);
+
+  const updateGoals = useCallback((currentTasks: Task[]) => {
+    const completedTasks = currentTasks.filter(t => t.completed).length;
+    const totalTasks = currentTasks.length;
+    const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+    
+    setGoals(prevGoals => prevGoals.map(goal => ({ ...goal, progress })));
+  }, [setGoals]);
 
   const handleToggleTask = (id: string) => {
     const newTasks = tasks.map(task =>
@@ -45,27 +53,32 @@ export default function Home() {
   
   const handleAddTask = (text: string) => {
     if (text.trim()) {
-      const newTask = { id: uuidv4(), text, completed: false };
-      setTasks(prevTasks => [...prevTasks, newTask]);
+      const newTask: Task = { id: uuidv4(), text, completed: false };
+      const newTasks = [...tasks, newTask];
+      setTasks(newTasks);
+      updateGoals(newTasks);
     }
   };
 
-  const updateGoals = useCallback((currentTasks: Task[]) => {
-    const completedTasks = currentTasks.filter(t => t.completed).length;
-    const totalTasks = currentTasks.length;
-    const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
-    
-    setGoals(prevGoals => prevGoals.map(goal => {
-      if(goal.type === 'weekly') {
-        return {...goal, progress: Math.min(100, progress + 20)} // Mocking some base progress
-      }
-      if(goal.type === 'monthly') {
-        return {...goal, progress: Math.min(100, progress)} // Mocking some base progress
-      }
-      return goal;
-    }));
+  const handleDeleteTask = (id: string) => {
+    const newTasks = tasks.filter(task => task.id !== id);
+    setTasks(newTasks);
+    updateGoals(newTasks);
+  };
 
-  }, []);
+  const handleAddNewGoal = (newGoalData: { title: string; type: 'weekly' | 'monthly' }) => {
+    const newGoal: Goal = {
+      id: uuidv4(),
+      title: newGoalData.title,
+      type: newGoalData.type,
+      progress: tasks.length > 0 ? Math.round(tasks.filter(t => t.completed).length / tasks.length * 100) : 0,
+    };
+    setGoals(prevGoals => [...prevGoals, newGoal]);
+  };
+
+  const handleDeleteGoal = (id: string) => {
+    setGoals(goals.filter(goal => goal.id !== id));
+  };
   
   const handleOnboardingComplete = () => {
     setIsOnboarded(true);
@@ -93,6 +106,9 @@ export default function Home() {
             momentumStreak={momentumStreak}
             onToggleTask={handleToggleTask}
             onAddTask={handleAddTask}
+            onDeleteTask={handleDeleteTask}
+            onAddNewGoal={handleAddNewGoal}
+            onDeleteGoal={handleDeleteGoal}
           />
         );
     }

@@ -6,10 +6,14 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { CheckCircle2, TrendingUp, Flame, Plus, Mic, MicOff } from 'lucide-react';
+import { CheckCircle2, TrendingUp, Flame, Plus, Mic, MicOff, Trash2 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+
 
 interface DashboardProps {
   tasks: Task[];
@@ -17,22 +21,26 @@ interface DashboardProps {
   momentumStreak: number;
   onToggleTask: (id: string) => void;
   onAddTask: (text: string) => void;
+  onDeleteTask: (id: string) => void;
+  onAddNewGoal: (goal: { title: string; type: 'weekly' | 'monthly' }) => void;
+  onDeleteGoal: (id: string) => void;
 }
 
-export default function Dashboard({ tasks, goals, momentumStreak, onToggleTask, onAddTask }: DashboardProps) {
+export default function Dashboard({ tasks, goals, momentumStreak, onToggleTask, onAddTask, onDeleteTask, onAddNewGoal, onDeleteGoal }: DashboardProps) {
   const [newTaskText, setNewTaskText] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const { toast } = useToast();
+  
+  const [isAddGoalOpen, setIsAddGoalOpen] = useState(false);
+  const [newGoalTitle, setNewGoalTitle] = useState('');
+  const [newGoalType, setNewGoalType] = useState<'weekly' | 'monthly'>('weekly');
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      toast({
-        variant: 'destructive',
-        title: 'Browser Not Supported',
-        description: 'Speech recognition is not available in your browser.',
-      });
+      // We won't toast here anymore to avoid spamming users whose browsers don't support it.
+      // The button will just be disabled.
       return;
     }
 
@@ -71,13 +79,27 @@ export default function Dashboard({ tasks, goals, momentumStreak, onToggleTask, 
 
   const handleMicClick = () => {
     if (!recognitionRef.current) {
-      return;
+        toast({
+            variant: 'destructive',
+            title: 'Browser Not Supported',
+            description: 'Speech recognition is not available in your browser.',
+        });
+        return;
     }
     if (isRecording) {
       recognitionRef.current.stop();
     } else {
-      recognitionRef.current.start();
-      setIsRecording(true);
+      try {
+        recognitionRef.current.start();
+        setIsRecording(true);
+      } catch (error) {
+          console.error("Could not start recognition", error)
+           toast({
+            variant: 'destructive',
+            title: 'Could not start recording',
+            description: 'Please check your microphone permissions and try again.',
+        });
+      }
     }
   };
 
@@ -88,8 +110,22 @@ export default function Dashboard({ tasks, goals, momentumStreak, onToggleTask, 
     setNewTaskText('');
   };
 
-  const weeklyGoal = goals.find(g => g.type === 'weekly');
-  const monthlyGoal = goals.find(g => g.type === 'monthly');
+  const handleAddNewGoalSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newGoalTitle.trim()) {
+      onAddNewGoal({ title: newGoalTitle, type: newGoalType });
+      setNewGoalTitle('');
+      setNewGoalType('weekly');
+      setIsAddGoalOpen(false);
+    } else {
+        toast({
+            variant: 'destructive',
+            title: 'Goal Title Required',
+            description: 'Please enter a title for your goal.',
+        });
+    }
+  };
+
   const completedTasks = tasks.filter(t => t.completed).length;
 
   return (
@@ -124,9 +160,10 @@ export default function Dashboard({ tasks, goals, momentumStreak, onToggleTask, 
                     id={task.id}
                     checked={task.completed}
                     onCheckedChange={() => onToggleTask(task.id)}
+                    aria-labelledby={`task-label-${task.id}`}
                   />
                   <label
-                    htmlFor={task.id}
+                    id={`task-label-${task.id}`}
                     className={cn(
                       'flex-1 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70',
                       task.completed && 'text-muted-foreground line-through'
@@ -134,8 +171,15 @@ export default function Dashboard({ tasks, goals, momentumStreak, onToggleTask, 
                   >
                     {task.text}
                   </label>
+                  <Button variant="ghost" size="icon" className="ml-auto h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive" onClick={() => onDeleteTask(task.id)}>
+                      <Trash2 className="h-4 w-4" />
+                      <span className="sr-only">Delete task</span>
+                  </Button>
                 </div>
               ))}
+                {tasks.length === 0 && (
+                    <p className="py-4 text-center text-sm text-muted-foreground">No tasks for today. Add one to get started!</p>
+                )}
             </div>
           </CardContent>
         </Card>
@@ -143,29 +187,73 @@ export default function Dashboard({ tasks, goals, momentumStreak, onToggleTask, 
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-3">
-                <TrendingUp className="h-6 w-6 text-primary" />
-                <CardTitle>Goal Progress</CardTitle>
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <TrendingUp className="h-6 w-6 text-primary" />
+                    <CardTitle>Goal Progress</CardTitle>
+                </div>
+                <Dialog open={isAddGoalOpen} onOpenChange={setIsAddGoalOpen}>
+                    <DialogTrigger asChild>
+                        <Button size="sm"><Plus className="h-4 w-4 mr-1" /> New</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Create a New Goal</DialogTitle>
+                            <DialogDescription>
+                                What new ambition do you want to conquer? Define it here.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <form onSubmit={handleAddNewGoalSubmit}>
+                            <div className="grid gap-4 py-4">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="goal-title">Goal Title</Label>
+                                    <Input 
+                                        id="goal-title" 
+                                        placeholder="e.g., Run a 5k marathon" 
+                                        value={newGoalTitle}
+                                        onChange={(e) => setNewGoalTitle(e.target.value)}
+                                    />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label>Goal Type</Label>
+                                    <RadioGroup defaultValue="weekly" value={newGoalType} onValueChange={(value: 'weekly' | 'monthly') => setNewGoalType(value)}>
+                                        <div className="flex items-center space-x-2">
+                                            <RadioGroupItem value="weekly" id="r-weekly" />
+                                            <Label htmlFor="r-weekly">Weekly</Label>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                            <RadioGroupItem value="monthly" id="r-monthly" />
+                                            <Label htmlFor="r-monthly">Monthly</Label>
+                                        </div>
+                                    </RadioGroup>
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <Button type="submit">Create Goal</Button>
+                            </DialogFooter>
+                        </form>
+                    </DialogContent>
+                </Dialog>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {weeklyGoal && (
-              <div>
-                <div className="mb-1 flex justify-between">
-                  <p className="text-sm font-medium">{weeklyGoal.title}</p>
-                  <p className="text-sm text-muted-foreground">{Math.round(weeklyGoal.progress)}%</p>
+            {goals.map((goal) => (
+              <div key={goal.id}>
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <p className="text-sm font-medium flex-1 truncate" title={goal.title}>{goal.title}</p>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <p className="text-sm text-muted-foreground">{Math.round(goal.progress)}%</p>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => onDeleteGoal(goal.id)}>
+                      <Trash2 className="h-4 w-4" />
+                      <span className="sr-only">Delete goal</span>
+                    </Button>
+                  </div>
                 </div>
-                <Progress value={weeklyGoal.progress} />
+                <Progress value={goal.progress} aria-label={`${goal.title} progress`} />
               </div>
-            )}
-            {monthlyGoal && (
-              <div>
-                <div className="mb-1 flex justify-between">
-                  <p className="text-sm font-medium">{monthlyGoal.title}</p>
-                  <p className="text-sm text-muted-foreground">{Math.round(monthlyGoal.progress)}%</p>
-                </div>
-                <Progress value={monthlyGoal.progress} />
-              </div>
+            ))}
+             {goals.length === 0 && (
+                <p className="py-4 text-center text-sm text-muted-foreground">No goals yet. Add one to get started!</p>
             )}
           </CardContent>
         </Card>
@@ -184,7 +272,7 @@ export default function Dashboard({ tasks, goals, momentumStreak, onToggleTask, 
                 </div>
                 <div className="flex gap-1">
                     {Array.from({ length: 7 }).map((_, i) => (
-                        <div key={i} className={cn("h-3 w-3 rounded-full", i < momentumStreak ? 'bg-accent' : 'bg-muted')}></div>
+                        <div key={i} className={cn("h-3 w-3 rounded-full", i < (momentumStreak % 8) ? 'bg-accent' : 'bg-muted')}></div>
                     ))}
                 </div>
             </div>
