@@ -27,13 +27,15 @@ export default function Home() {
   const [goals, setGoals] = useLocalStorage<Goal[]>('goal-track-ai-goals', initialGoals);
   const [activeView, setActiveView] = useState<'dashboard' | 'review' | 'settings'>('dashboard');
   const [isOnboarded, setIsOnboarded] = useLocalStorage('goal-track-ai-onboarded', false);
-  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   const [momentumStreak, setMomentumStreak] = useLocalStorage('goal-track-ai-momentum', 5);
 
   useEffect(() => {
-    // Only show onboarding on the client-side after checking local storage
-    setShowOnboarding(!isOnboarded);
-  }, [isOnboarded]);
+    // This effect runs only on the client, after the component has mounted.
+    // This ensures that we don't try to render the onboarding UI on the server
+    // or before we've had a chance to check localStorage.
+    setIsClient(true);
+  }, []);
 
   const updateGoals = useCallback((currentTasks: Task[]) => {
     const completedTasks = currentTasks.filter(t => t.completed).length;
@@ -82,7 +84,6 @@ export default function Home() {
   
   const handleOnboardingComplete = () => {
     setIsOnboarded(true);
-    setShowOnboarding(false);
   };
 
   const handleResetData = () => {
@@ -116,7 +117,7 @@ export default function Home() {
 
   return (
     <>
-      {showOnboarding && <Onboarding onComplete={handleOnboardingComplete} />}
+      {isClient && !isOnboarded && <Onboarding onComplete={handleOnboardingComplete} />}
       <div className="flex flex-col min-h-screen bg-background">
         <Header activeView={activeView} setActiveView={setActiveView} />
         <main className="flex-1 p-4 sm:p-6 md:p-8">
