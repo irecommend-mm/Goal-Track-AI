@@ -30,3 +30,8 @@ export interface UserStats {
     level: number;
     xp: number;
 }
+
+export interface NotificationSettings {
+    dailyReminders: boolean;
+    weeklyReviewReminders: boolean;
+}

@@ -6,7 +6,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Legend, ResponsiveContainer } from 'recharts';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Progress } from '@/components/ui/progress';
-import { Award, BarChart3, Star, Trophy, TrendingUp, Check, Crown } from 'lucide-react';
+import { Award, BarChart3, TrendingUp } from 'lucide-react';
 import { format, subDays, eachDayOfInterval } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useMemo } from 'react';
@@ -23,14 +23,6 @@ const chartConfig = {
     color: 'hsl(var(--primary))',
   },
 } satisfies ChartConfig;
-
-const iconMap: { [key: string]: React.ElementType } = {
-  Check: Check,
-  Trophy: Trophy,
-  Star: Star,
-  Crown: Crown,
-  Award: Award,
-};
 
 const LEVEL_UP_BASE_XP = 100;
 

@@ -5,13 +5,16 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Bell, Trash2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import type { NotificationSettings } from '@/lib/types';
 
 
 interface SettingsProps {
     resetData: () => void;
+    notificationSettings: NotificationSettings;
+    onSettingsChange: (newSettings: Partial<NotificationSettings>) => void;
 }
 
-export default function Settings({ resetData }: SettingsProps) {
+export default function Settings({ resetData, notificationSettings, onSettingsChange }: SettingsProps) {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <Card>
@@ -30,7 +33,10 @@ export default function Settings({ resetData }: SettingsProps) {
                 Get a push notification every morning.
               </p>
             </div>
-            <Switch defaultChecked/>
+            <Switch
+                checked={notificationSettings.dailyReminders}
+                onCheckedChange={(checked) => onSettingsChange({ dailyReminders: checked })}
+            />
           </div>
           <div className="flex items-center justify-between rounded-lg border p-4">
             <div>
@@ -39,7 +45,10 @@ export default function Settings({ resetData }: SettingsProps) {
                 Get a reminder at the end of each week.
               </p>
             </div>
-            <Switch defaultChecked/>
+            <Switch
+                checked={notificationSettings.weeklyReviewReminders}
+                onCheckedChange={(checked) => onSettingsChange({ weeklyReviewReminders: checked })}
+            />
           </div>
         </CardContent>
       </Card>

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import type { Task, Goal, ProgressRecord, Achievement, UserStats } from '@/lib/types';
+import type { Task, Goal, ProgressRecord, Achievement, UserStats, NotificationSettings } from '@/lib/types';
 import useLocalStorage from '@/hooks/use-local-storage';
 import Header from '@/components/header';
 import Onboarding from '@/components/onboarding';
@@ -35,6 +35,11 @@ const initialAchievements: Achievement[] = [
     { id: 'goal-getter', name: 'Goal Getter', description: 'Achieve 100% on a goal.', icon: Award, unlocked: false },
 ];
 
+const initialNotificationSettings: NotificationSettings = {
+    dailyReminders: true,
+    weeklyReviewReminders: true,
+};
+
 const XP_PER_TASK = 10;
 const LEVEL_UP_BASE_XP = 100;
 
@@ -49,6 +54,7 @@ export default function Home() {
   const [achievements, setAchievements] = useLocalStorage<Achievement[]>('goal-track-ai-achievements', initialAchievements);
   const [userStats, setUserStats] = useLocalStorage<UserStats>('goal-track-ai-user-stats', { level: 1, xp: 0 });
   const [showCelebration, setShowCelebration] = useState(false);
+  const [notificationSettings, setNotificationSettings] = useLocalStorage<NotificationSettings>('goal-track-ai-notifications', initialNotificationSettings);
 
   const { toast } = useToast();
 
@@ -193,7 +199,12 @@ export default function Home() {
     setAchievements(initialAchievements);
     setProgressHistory([]);
     setUserStats({ level: 1, xp: 0 });
-    setIsOnboarded(false); // Let's also reset onboarding
+    setNotificationSettings(initialNotificationSettings);
+    setIsOnboarded(false);
+  };
+
+  const handleUpdateNotificationSettings = (newSettings: Partial<NotificationSettings>) => {
+    setNotificationSettings(prev => ({ ...prev, ...newSettings }));
   };
 
   const renderView = () => {
@@ -201,7 +212,11 @@ export default function Home() {
       case 'review':
         return <WeeklyReview goals={goals} />;
       case 'settings':
-        return <Settings resetData={handleResetData} />;
+        return <Settings 
+                    resetData={handleResetData}
+                    notificationSettings={notificationSettings}
+                    onSettingsChange={handleUpdateNotificationSettings}
+                />;
       case 'progress':
         return <ProgressView history={progressHistory} achievements={achievements} stats={userStats} />;
       case 'dashboard':
