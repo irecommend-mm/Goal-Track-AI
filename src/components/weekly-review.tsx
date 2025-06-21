@@ -1,6 +1,6 @@
 'use client';
 
-import { useFormState } from 'react-dom';
+import { useFormStatus } from 'react-dom';
 import type { Goal } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,31 +8,17 @@ import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { getAiSuggestions, AIActionState } from '@/app/actions';
 import { BrainCircuit, Lightbulb, LoaderCircle, AlertTriangle } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useActionState, useEffect, useRef } from 'react';
 
 interface WeeklyReviewProps {
   goals: Goal[];
 }
 
 function SubmitButton() {
-    const [pending, setPending] = useState(false);
-    const formRef = useRef<HTMLFormElement>(null);
-
-    useEffect(() => {
-        const form = formRef.current?.closest('form');
-        if (form) {
-            const handleSubmission = () => {
-                if(form.checkValidity()) {
-                    setPending(true);
-                }
-            };
-            form.addEventListener('submit', handleSubmission);
-            return () => form.removeEventListener('submit', handleSubmission);
-        }
-    }, []);
+    const { pending } = useFormStatus();
 
     return (
-        <Button type="submit" disabled={pending} ref={formRef}>
+        <Button type="submit" disabled={pending}>
             {pending ? (
                 <>
                     <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
@@ -50,26 +36,14 @@ function SubmitButton() {
 
 export default function WeeklyReview({ goals }: WeeklyReviewProps) {
   const initialState: AIActionState = { message: '' };
-  const [state, formAction] = useFormState(getAiSuggestions, initialState);
+  const [state, formAction] = useActionState(getAiSuggestions, initialState);
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
-      if(state.message){
-        const form = formRef.current;
-        const button = form?.querySelector('button[type="submit"]');
-        if(button instanceof HTMLButtonElement){
-            const reactButtonInstance = Object.keys(button).find(key => key.startsWith('__reactProps$'));
-            if(reactButtonInstance && (button as any)[reactButtonInstance].disabled) {
-                // Manually re-enable button if form submission is complete.
-                // This is a workaround for the submit pending state management.
-                (button as any)[reactButtonInstance].ref.current.removeAttribute('disabled');
-            }
-        }
-      }
       if (state.message && !state.error) {
         formRef.current?.reset();
       }
-  }, [state])
+  }, [state]);
 
   const currentGoalsString = goals.map(g => `${g.title} (Progress: ${Math.round(g.progress)}%)`).join('\n');
 
