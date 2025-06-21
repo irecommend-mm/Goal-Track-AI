@@ -18,7 +18,7 @@ function SubmitButton() {
     const { pending } = useFormStatus();
 
     return (
-        <Button type="submit" disabled={pending}>
+        <Button type="submit" disabled={pending} className="w-full sm:w-auto">
             {pending ? (
                 <>
                     <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
@@ -86,7 +86,7 @@ export default function WeeklyReview({ goals }: WeeklyReviewProps) {
           {state.suggestion && (
             <Alert className="mt-6">
               <Lightbulb className="h-4 w-4" />
-              <AlertTitle>{state.message}</AlertTitle>
+              <AlertTitle>Your AI-Powered Suggestions</AlertTitle>
               <AlertDescription>
                 <p className="whitespace-pre-wrap">{state.suggestion}</p>
               </AlertDescription>

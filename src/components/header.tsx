@@ -3,6 +3,7 @@
 import { Target, LayoutDashboard, Star, Settings as SettingsIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface HeaderProps {
   activeView: 'dashboard' | 'review' | 'settings';
@@ -37,18 +38,27 @@ export default function Header({ activeView, setActiveView }: HeaderProps) {
             </Button>
           ))}
         </nav>
-        <div className="md:hidden">
-            <select
-                className="w-full rounded-md border-input bg-background p-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
-                value={activeView}
-                onChange={(e) => setActiveView(e.target.value as 'dashboard' | 'review' | 'settings')}
-                aria-label="Select view"
-            >
-                {navItems.map((item) => (
-                    <option key={item.id} value={item.id}>{item.label}</option>
-                ))}
-            </select>
-        </div>
+        <nav className="flex items-center space-x-1 md:hidden">
+          <TooltipProvider>
+            {navItems.map((item) => (
+              <Tooltip key={item.id}>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={activeView === item.id ? 'secondary' : 'ghost'}
+                    size="icon"
+                    onClick={() => setActiveView(item.id)}
+                    aria-label={item.label}
+                  >
+                    <item.icon className="h-5 w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{item.label}</p>
+                </TooltipContent>
+              </Tooltip>
+            ))}
+          </TooltipProvider>
+        </nav>
       </div>
     </header>
   );

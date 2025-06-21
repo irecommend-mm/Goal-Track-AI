@@ -6,9 +6,10 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { CheckCircle2, TrendingUp, Flame, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { CheckCircle2, TrendingUp, Flame, Plus, Mic, MicOff } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 interface DashboardProps {
   tasks: Task[];
@@ -20,6 +21,66 @@ interface DashboardProps {
 
 export default function Dashboard({ tasks, goals, momentumStreak, onToggleTask, onAddTask }: DashboardProps) {
   const [newTaskText, setNewTaskText] = useState('');
+  const [isRecording, setIsRecording] = useState(false);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast({
+        variant: 'destructive',
+        title: 'Browser Not Supported',
+        description: 'Speech recognition is not available in your browser.',
+      });
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[event.results.length - 1][0].transcript.trim();
+      setNewTaskText(transcript);
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error', event.error);
+      toast({
+        variant: 'destructive',
+        title: 'Speech Recognition Error',
+        description:
+          event.error === 'not-allowed'
+            ? 'Microphone access denied. Please allow it in your browser settings.'
+            : `An error occurred: ${event.error}`,
+      });
+    };
+
+    recognition.onend = () => {
+      setIsRecording(false);
+    };
+
+    recognitionRef.current = recognition;
+
+    return () => {
+      recognitionRef.current?.stop();
+    };
+  }, [toast]);
+
+  const handleMicClick = () => {
+    if (!recognitionRef.current) {
+      return;
+    }
+    if (isRecording) {
+      recognitionRef.current.stop();
+    } else {
+      recognitionRef.current.start();
+      setIsRecording(true);
+    }
+  };
+
 
   const handleAddTaskSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,11 +108,14 @@ export default function Dashboard({ tasks, goals, momentumStreak, onToggleTask, 
           <CardContent>
             <form onSubmit={handleAddTaskSubmit} className="mb-4 flex gap-2">
               <Input
-                placeholder="Add a new task..."
+                placeholder="Add a new task or use the mic..."
                 value={newTaskText}
                 onChange={e => setNewTaskText(e.target.value)}
               />
               <Button type="submit" size="icon" aria-label="Add task"><Plus /></Button>
+              <Button type="button" size="icon" variant={isRecording ? "destructive" : "outline"} onClick={handleMicClick} aria-label="Record task by voice">
+                {isRecording ? <MicOff /> : <Mic />}
+              </Button>
             </form>
             <div className="space-y-3">
               {tasks.map(task => (
