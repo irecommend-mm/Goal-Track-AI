@@ -11,6 +11,7 @@ export interface Goal {
   title: string;
   progress: number;
   type: 'weekly' | 'monthly';
+  imageUrl?: string;
 }
 
 export interface ProgressRecord {

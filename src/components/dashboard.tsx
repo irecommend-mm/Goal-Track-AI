@@ -1,18 +1,19 @@
 'use client';
 
 import type { Task, Goal } from '@/lib/types';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { CheckCircle2, TrendingUp, Flame, Plus, Mic, MicOff, Trash2, CalendarCheck } from 'lucide-react';
+import { CheckCircle2, TrendingUp, Flame, Plus, Mic, MicOff, Trash2, CalendarCheck, LoaderCircle, BrainCircuit } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { generateGoalImage } from '@/ai/flows/generate-goal-image';
 
 
 interface DashboardProps {
@@ -23,7 +24,7 @@ interface DashboardProps {
   onToggleTask: (id: string) => void;
   onAddTask: (text: string) => void;
   onDeleteTask: (id: string) => void;
-  onAddNewGoal: (goal: { title: string; type: 'weekly' | 'monthly' }) => void;
+  onAddNewGoal: (goal: { title: string; type: 'weekly' | 'monthly', imageUrl: string }) => void;
   onDeleteGoal: (id: string) => void;
 }
 
@@ -36,6 +37,7 @@ export default function Dashboard({ tasks, goals, momentumStreak, dailyProgress,
   const [isAddGoalOpen, setIsAddGoalOpen] = useState(false);
   const [newGoalTitle, setNewGoalTitle] = useState('');
   const [newGoalType, setNewGoalType] = useState<'weekly' | 'monthly'>('weekly');
+  const [isCreatingGoal, setIsCreatingGoal] = useState(false);
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -109,19 +111,34 @@ export default function Dashboard({ tasks, goals, momentumStreak, dailyProgress,
     setNewTaskText('');
   };
 
-  const handleAddNewGoalSubmit = (e: React.FormEvent) => {
+  const handleAddNewGoalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (newGoalTitle.trim()) {
-      onAddNewGoal({ title: newGoalTitle, type: newGoalType });
-      setNewGoalTitle('');
-      setNewGoalType('weekly');
-      setIsAddGoalOpen(false);
-    } else {
+    if (!newGoalTitle.trim()) {
         toast({
             variant: 'destructive',
             title: 'Goal Title Required',
             description: 'Please enter a title for your goal.',
         });
+        return;
+    }
+    
+    setIsCreatingGoal(true);
+    try {
+        const { imageUrl } = await generateGoalImage({ goalTitle: newGoalTitle });
+        onAddNewGoal({ title: newGoalTitle, type: newGoalType, imageUrl });
+        
+        setNewGoalTitle('');
+        setNewGoalType('weekly');
+        setIsAddGoalOpen(false);
+    } catch(error) {
+        console.error("Error generating goal image", error);
+        toast({
+            variant: 'destructive',
+            title: 'AI Image Error',
+            description: 'Could not generate an image for your goal. Please try again.',
+        });
+    } finally {
+        setIsCreatingGoal(false);
     }
   };
 
@@ -206,17 +223,17 @@ export default function Dashboard({ tasks, goals, momentumStreak, dailyProgress,
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <TrendingUp className="h-6 w-6 text-primary" />
-                    <CardTitle>Goal Progress</CardTitle>
+                    <CardTitle>Your Goals</CardTitle>
                 </div>
                 <Dialog open={isAddGoalOpen} onOpenChange={setIsAddGoalOpen}>
                     <DialogTrigger asChild>
-                        <Button size="sm"><Plus className="h-4 w-4 mr-1" /> New</Button>
+                        <Button size="sm"><Plus className="h-4 w-4 mr-1" /> New Goal</Button>
                     </DialogTrigger>
                     <DialogContent>
                         <DialogHeader>
                             <DialogTitle>Create a New Goal</DialogTitle>
                             <DialogDescription>
-                                What new ambition do you want to conquer? Define it here.
+                                What new ambition do you want to conquer? The AI will create an inspirational image for it.
                             </DialogDescription>
                         </DialogHeader>
                         <form onSubmit={handleAddNewGoalSubmit}>
@@ -245,7 +262,19 @@ export default function Dashboard({ tasks, goals, momentumStreak, dailyProgress,
                                 </div>
                             </div>
                             <DialogFooter>
-                                <Button type="submit">Create Goal</Button>
+                                <Button type="submit" disabled={isCreatingGoal}>
+                                  {isCreatingGoal ? (
+                                    <>
+                                      <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                                      Creating...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <BrainCircuit className="mr-2 h-4 w-4" />
+                                      Create Goal
+                                    </>
+                                  )}
+                                </Button>
                             </DialogFooter>
                         </form>
                     </DialogContent>
@@ -254,19 +283,29 @@ export default function Dashboard({ tasks, goals, momentumStreak, dailyProgress,
           </CardHeader>
           <CardContent className="space-y-4">
             {goals.map((goal) => (
-              <div key={goal.id}>
-                <div className="mb-1 flex items-center justify-between gap-2">
-                  <p className="text-sm font-medium flex-1 truncate" title={goal.title}>{goal.title}</p>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <p className="text-sm text-muted-foreground">{Math.round(goal.progress)}%</p>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => onDeleteGoal(goal.id)}>
-                      <Trash2 className="h-4 w-4" />
-                      <span className="sr-only">Delete goal</span>
-                    </Button>
-                  </div>
-                </div>
-                <Progress value={goal.progress} aria-label={`${goal.title} progress`} />
-              </div>
+              <Card key={goal.id} className="overflow-hidden">
+                {goal.imageUrl && (
+                    <div className="aspect-video w-full bg-secondary">
+                        <img src={goal.imageUrl} alt={goal.title} data-ai-hint="abstract goal" className="h-full w-full object-cover" />
+                    </div>
+                )}
+                <CardHeader className='pb-2'>
+                    <div className="flex items-start justify-between gap-2">
+                        <CardTitle className="text-lg flex-1 truncate" title={goal.title}>{goal.title}</CardTitle>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive shrink-0" onClick={() => onDeleteGoal(goal.id)}>
+                          <Trash2 className="h-4 w-4" />
+                          <span className="sr-only">Delete goal</span>
+                        </Button>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <div className="mb-1 flex items-center justify-between">
+                        <p className="text-sm font-medium">Progress</p>
+                        <p className="text-sm text-muted-foreground">{Math.round(goal.progress)}%</p>
+                    </div>
+                    <Progress value={goal.progress} aria-label={`${goal.title} progress`} />
+                </CardContent>
+              </Card>
             ))}
              {goals.length === 0 && (
                 <p className="py-4 text-center text-sm text-muted-foreground">No goals yet. Add one to get started!</p>

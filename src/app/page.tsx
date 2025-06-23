@@ -24,8 +24,8 @@ const initialTasks: Task[] = [
 ];
 
 const initialGoals: Goal[] = [
-  { id: 'g1', title: 'Weekly Fitness Goal', progress: 50, type: 'weekly' },
-  { id: 'g2', title: 'Monthly Learning Goal', progress: 50, type: 'monthly' },
+  { id: 'g1', title: 'Weekly Fitness Goal', progress: 50, type: 'weekly', imageUrl: `https://placehold.co/600x400.png` },
+  { id: 'g2', title: 'Monthly Learning Goal', progress: 50, type: 'monthly', imageUrl: `https://placehold.co/600x400.png` },
 ];
 
 const initialAchievements: Achievement[] = [
@@ -221,11 +221,12 @@ export default function Home() {
     updateGoals(newTasks);
   };
 
-  const handleAddNewGoal = (newGoalData: { title: string; type: 'weekly' | 'monthly' }) => {
+  const handleAddNewGoal = (newGoalData: { title: string; type: 'weekly' | 'monthly', imageUrl: string }) => {
     const newGoal: Goal = {
       id: uuidv4(),
       title: newGoalData.title,
       type: newGoalData.type,
+      imageUrl: newGoalData.imageUrl,
       progress: tasks.length > 0 ? Math.round(tasks.filter(t => t.completed).length / tasks.length * 100) : 0,
     };
     setGoals(prevGoals => [...prevGoals, newGoal]);
