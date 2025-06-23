@@ -72,6 +72,75 @@
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
+  .theme-forest {
+    --background: 210 30% 98%;
+    --foreground: 140 30% 10%;
+    --card: 210 30% 100%;
+    --primary: 140 40% 45%;
+    --primary-foreground: 140 40% 98%;
+    --secondary: 140 10% 96%;
+    --accent: 140 40% 65%;
+    --accent-foreground: 140 40% 10%;
+    --ring: 140 40% 45%;
+  }
+  .dark .theme-forest {
+    --background: 140 25% 10%;
+    --foreground: 140 20% 96%;
+    --card: 140 25% 12%;
+    --primary: 140 50% 50%;
+    --primary-foreground: 140 20% 98%;
+    --secondary: 140 20% 18%;
+    --accent: 140 50% 70%;
+    --accent-foreground: 140 20% 10%;
+    --ring: 140 50% 50%;
+  }
+
+  .theme-ocean {
+    --background: 205 90% 96%;
+    --foreground: 215 60% 15%;
+    --card: 205 90% 100%;
+    --primary: 210 80% 55%;
+    --primary-foreground: 210 80% 98%;
+    --secondary: 210 50% 96%;
+    --accent: 190 70% 65%;
+    --accent-foreground: 190 70% 10%;
+    --ring: 210 80% 55%;
+  }
+  .dark .theme-ocean {
+    --background: 215 60% 10%;
+    --foreground: 210 60% 96%;
+    --card: 215 60% 12%;
+    --primary: 210 80% 60%;
+    --primary-foreground: 210 60% 98%;
+    --secondary: 215 50% 18%;
+    --accent: 190 70% 70%;
+    --accent-foreground: 190 60% 10%;
+    --ring: 210 80% 60%;
+  }
+  
+  .theme-sunset {
+    --background: 20 60% 97%;
+    --foreground: 20 40% 10%;
+    --card: 20 60% 100%;
+    --primary: 30 90% 60%;
+    --primary-foreground: 30 90% 98%;
+    --secondary: 25 50% 96%;
+    --accent: 0 80% 70%;
+    --accent-foreground: 0 80% 10%;
+    --ring: 30 90% 60%;
+  }
+  .dark .theme-sunset {
+    --background: 20 40% 10%;
+    --foreground: 20 40% 96%;
+    --card: 20 40% 12%;
+    --primary: 30 90% 65%;
+    --primary-foreground: 30 90% 98%;
+    --secondary: 25 40% 18%;
+    --accent: 0 80% 75%;
+    --accent-foreground: 0 80% 10%;
+    --ring: 30 90% 65%;
+  }
 }
 
 @layer base {
@@ -81,4 +150,26 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* For Productivity Heatmap */
+@layer components {
+    .rdp-day_prod_0 {
+        /* No special style for 0 tasks */
+    }
+    .rdp-day_prod_1 {
+        @apply bg-primary/20;
+    }
+    .rdp-day_prod_2 {
+        @apply bg-primary/40;
+    }
+    .rdp-day_prod_3 {
+        @apply bg-primary/60;
+    }
+    .rdp-day_prod_4 {
+        @apply bg-primary/80;
+    }
+    .rdp-day:not([disabled]):hover {
+        @apply bg-primary/10;
+    }
 }

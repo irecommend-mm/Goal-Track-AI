@@ -16,6 +16,8 @@ export interface Goal {
 export interface ProgressRecord {
     date: string; // YYYY-MM-DD
     progress: number;
+    completedTasks: number;
+    totalTasks: number;
 }
 
 export interface Achievement {

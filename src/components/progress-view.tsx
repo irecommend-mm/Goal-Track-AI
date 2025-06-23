@@ -1,19 +1,19 @@
 'use client';
 
-import type { ProgressRecord, Achievement, UserStats } from '@/lib/types';
+import type { ProgressRecord, UserStats } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Legend, ResponsiveContainer } from 'recharts';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from 'recharts';
 import { Progress } from '@/components/ui/progress';
-import { Award, BarChart3, TrendingUp } from 'lucide-react';
-import { format, subDays, eachDayOfInterval } from 'date-fns';
-import { cn } from '@/lib/utils';
+import { BarChart3, TrendingUp, CalendarDays } from 'lucide-react';
+import { format, subDays, eachDayOfInterval, eachMonthOfInterval, getDaysInMonth } from 'date-fns';
 import { useMemo } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import ProductivityHeatmap from './productivity-heatmap';
+
 
 interface ProgressViewProps {
   history: ProgressRecord[];
-  achievements: Achievement[];
   stats: UserStats;
 }
 
@@ -26,7 +26,7 @@ const chartConfig = {
 
 const LEVEL_UP_BASE_XP = 100;
 
-export default function ProgressView({ history, achievements, stats }: ProgressViewProps) {
+export default function ProgressView({ history, stats }: ProgressViewProps) {
 
   const weeklyChartData = useMemo(() => {
     const last7Days = eachDayOfInterval({
@@ -44,6 +44,39 @@ export default function ProgressView({ history, achievements, stats }: ProgressV
     });
   }, [history]);
   
+  const monthlyChartData = useMemo(() => {
+    const today = new Date();
+    const daysInMonth = getDaysInMonth(today);
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    const days = eachDayOfInterval({ start: monthStart, end: new Date() });
+
+    return days.map(day => {
+        const dateStr = format(day, 'yyyy-MM-dd');
+        const record = history.find(h => h.date === dateStr);
+        return {
+            date: format(day, 'd'), // "1", "2"
+            progress: record ? record.progress : 0,
+        };
+    });
+  }, [history]);
+
+  const yearlyChartData = useMemo(() => {
+      const today = new Date();
+      const yearStart = new Date(today.getFullYear(), 0, 1);
+      const months = eachMonthOfInterval({ start: yearStart, end: today });
+
+      return months.map(month => {
+          const monthStr = format(month, 'yyyy-MM');
+          const recordsInMonth = history.filter(h => h.date.startsWith(monthStr));
+          const totalProgress = recordsInMonth.reduce((sum, r) => sum + r.progress, 0);
+          const avgProgress = recordsInMonth.length > 0 ? totalProgress / recordsInMonth.length : 0;
+          return {
+              date: format(month, 'MMM'), // "Jan", "Feb"
+              progress: Math.round(avgProgress),
+          };
+      });
+  }, [history]);
+
   const xpForNextLevel = LEVEL_UP_BASE_XP * stats.level;
   const levelProgress = xpForNextLevel > 0 ? (stats.xp / xpForNextLevel) * 100 : 0;
 
@@ -57,7 +90,7 @@ export default function ProgressView({ history, achievements, stats }: ProgressV
             </div>
             <CardDescription>Visualize your accomplishments and growth over time.</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-6 sm:grid-cols-2">
+        <CardContent className="space-y-6">
             <Card>
                 <CardHeader>
                     <div className='flex items-center gap-3'>
@@ -76,19 +109,50 @@ export default function ProgressView({ history, achievements, stats }: ProgressV
             </Card>
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-xl">Weekly Snapshot</CardTitle>
-                    <CardDescription>Daily progress over the last 7 days.</CardDescription>
+                    <CardTitle className="text-xl">Progress Charts</CardTitle>
+                    <CardDescription>Your performance over different time periods.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <ChartContainer config={chartConfig} className="h-[150px] w-full">
-                        <BarChart accessibilityLayer data={weeklyChartData}>
-                            <CartesianGrid vertical={false} />
-                            <XAxis dataKey="date" tickLine={false} tickMargin={10} axisLine={false} />
-                            <YAxis domain={[0, 100]} hide />
-                            <ChartTooltip content={<ChartTooltipContent />} />
-                            <Bar dataKey="progress" fill="var(--color-progress)" radius={4} />
-                        </BarChart>
-                    </ChartContainer>
+                    <Tabs defaultValue="weekly" className="w-full">
+                        <TabsList className="grid w-full grid-cols-3">
+                            <TabsTrigger value="weekly">Weekly</TabsTrigger>
+                            <TabsTrigger value="monthly">Monthly</TabsTrigger>
+                            <TabsTrigger value="yearly">Yearly</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="weekly" className="mt-4">
+                            <ChartContainer config={chartConfig} className="h-[200px] w-full">
+                                <BarChart accessibilityLayer data={weeklyChartData}>
+                                    <CartesianGrid vertical={false} />
+                                    <XAxis dataKey="date" tickLine={false} tickMargin={10} axisLine={false} />
+                                    <YAxis domain={[0, 100]} hide />
+                                    <ChartTooltip content={<ChartTooltipContent />} />
+                                    <Bar dataKey="progress" fill="var(--color-progress)" radius={4} />
+                                </BarChart>
+                            </ChartContainer>
+                        </TabsContent>
+                        <TabsContent value="monthly" className="mt-4">
+                            <ChartContainer config={chartConfig} className="h-[200px] w-full">
+                                <BarChart accessibilityLayer data={monthlyChartData}>
+                                    <CartesianGrid vertical={false} />
+                                    <XAxis dataKey="date" tickLine={false} tickMargin={10} axisLine={false} />
+                                    <YAxis domain={[0, 100]} hide />
+                                    <ChartTooltip content={<ChartTooltipContent />} />
+                                    <Bar dataKey="progress" fill="var(--color-progress)" radius={4} />
+                                </BarChart>
+                            </ChartContainer>
+                        </TabsContent>
+                        <TabsContent value="yearly" className="mt-4">
+                            <ChartContainer config={chartConfig} className="h-[200px] w-full">
+                                <BarChart accessibilityLayer data={yearlyChartData}>
+                                    <CartesianGrid vertical={false} />
+                                    <XAxis dataKey="date" tickLine={false} tickMargin={10} axisLine={false} />
+                                    <YAxis domain={[0, 100]} hide />
+                                    <ChartTooltip content={<ChartTooltipContent />} />
+                                    <Bar dataKey="progress" fill="var(--color-progress)" radius={4} />
+                                </BarChart>
+                            </ChartContainer>
+                        </TabsContent>
+                    </Tabs>
                 </CardContent>
             </Card>
         </CardContent>
@@ -97,42 +161,13 @@ export default function ProgressView({ history, achievements, stats }: ProgressV
       <Card>
         <CardHeader>
           <div className='flex items-center gap-3'>
-            <Award className="h-6 w-6 text-primary" />
-            <CardTitle>Achievements</CardTitle>
+            <CalendarDays className="h-6 w-6 text-primary" />
+            <CardTitle>Productivity Heatmap</CardTitle>
           </div>
-          <CardDescription>Badges you've earned on your journey.</CardDescription>
+          <CardDescription>Your daily task completion over the last few months.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-            {achievements.map((ach) => {
-              const Icon = ach.icon;
-              return (
-              <TooltipProvider key={ach.id}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className={cn(
-                        "flex flex-col items-center justify-center gap-2 rounded-lg border p-4 text-center transition-all",
-                        ach.unlocked ? 'border-accent/80 bg-accent/10' : 'bg-muted/50'
-                    )}>
-                      <div className={cn(
-                          "flex h-12 w-12 items-center justify-center rounded-full",
-                          ach.unlocked ? 'bg-accent text-accent-foreground' : 'bg-muted-foreground/20 text-muted-foreground'
-                      )}>
-                        <Icon className="h-6 w-6" />
-                      </div>
-                      <p className={cn(
-                          "text-sm font-semibold",
-                          !ach.unlocked && 'text-muted-foreground'
-                      )}>{ach.name}</p>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{ach.description}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )})}
-          </div>
+        <CardContent className="flex justify-center">
+            <ProductivityHeatmap history={history} />
         </CardContent>
       </Card>
     </div>

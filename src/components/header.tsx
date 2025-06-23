@@ -1,18 +1,19 @@
 'use client';
 
-import { Target, LayoutDashboard, Star, Settings as SettingsIcon, BarChart3 } from 'lucide-react';
+import { Target, LayoutDashboard, Star, Settings as SettingsIcon, BarChart3, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface HeaderProps {
-  activeView: 'dashboard' | 'review' | 'settings' | 'progress';
-  setActiveView: (view: 'dashboard' | 'review' | 'settings' | 'progress') => void;
+  activeView: 'dashboard' | 'review' | 'settings' | 'progress' | 'achievements';
+  setActiveView: (view: 'dashboard' | 'review' | 'settings' | 'progress' | 'achievements') => void;
 }
 
 const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'progress', label: 'Progress', icon: BarChart3 },
+    { id: 'achievements', label: 'Achievements', icon: Award },
     { id: 'review', label: 'Weekly Review', icon: Star },
     { id: 'settings', label: 'Settings', icon: SettingsIcon },
 ] as const;

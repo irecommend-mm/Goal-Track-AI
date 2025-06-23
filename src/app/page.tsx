@@ -9,9 +9,10 @@ import Dashboard from '@/components/dashboard';
 import WeeklyReview from '@/components/weekly-review';
 import Settings from '@/components/settings';
 import ProgressView from '@/components/progress-view';
+import AchievementsPage from '@/components/achievements-page';
 import Celebration from '@/components/celebration';
 import { v4 as uuidv4 } from 'uuid';
-import { getDay, format, startOfWeek, isSameDay } from 'date-fns';
+import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { Award, Check, Crown, Star, Trophy } from 'lucide-react';
 
@@ -31,7 +32,7 @@ const initialAchievements: Achievement[] = [
     { id: 'first-step', name: 'First Step', description: 'Complete your first task.', icon: Check, unlocked: false },
     { id: 'task-master', name: 'Task Master', description: 'Complete 10 tasks.', icon: Trophy, unlocked: false },
     { id: 'perfect-day', name: 'Perfect Day', description: 'Complete all daily tasks.', icon: Star, unlocked: false },
-    { id: 'streak-starter', name: 'Momentum King', description: 'Maintain a 7-day streak.', icon: Crown, unlocked: false },
+    { id: 'momentum-king', name: 'Momentum King', description: 'Maintain a 7-day streak.', icon: Crown, unlocked: false },
     { id: 'goal-getter', name: 'Goal Getter', description: 'Achieve 100% on a goal.', icon: Award, unlocked: false },
 ];
 
@@ -46,7 +47,7 @@ const LEVEL_UP_BASE_XP = 100;
 export default function Home() {
   const [tasks, setTasks] = useLocalStorage<Task[]>('goal-track-ai-tasks', initialTasks);
   const [goals, setGoals] = useLocalStorage<Goal[]>('goal-track-ai-goals', initialGoals);
-  const [activeView, setActiveView] = useState<'dashboard' | 'review' | 'settings' | 'progress'>('dashboard');
+  const [activeView, setActiveView] = useState<'dashboard' | 'review' | 'settings' | 'progress' | 'achievements'>('dashboard');
   const [isOnboarded, setIsOnboarded] = useLocalStorage('goal-track-ai-onboarded', false);
   const [isClient, setIsClient] = useState(false);
   const [momentumStreak, setMomentumStreak] = useLocalStorage('goal-track-ai-momentum', 5);
@@ -79,15 +80,10 @@ export default function Home() {
         }
     };
 
-    // First Step
     if (tasks.some(t => t.completed)) unlock('first-step');
-    // Task Master
     if (tasks.filter(t => t.completed).length >= 10) unlock('task-master');
-    // Perfect Day
     if (dailyProgress === 100) unlock('perfect-day');
-    // Momentum King
-    if (momentumStreak >= 7) unlock('streak-starter');
-    // Goal Getter
+    if (momentumStreak >= 7) unlock('momentum-king');
     if (goals.some(g => g.progress === 100)) unlock('goal-getter');
 
     if (changed) {
@@ -100,15 +96,20 @@ export default function Home() {
     checkAndUnlockAchievements();
   }, [checkAndUnlockAchievements]);
   
-  const updateProgressHistory = useCallback((newProgress: number) => {
+  const updateProgressHistory = useCallback((newProgress: number, currentTasks: Task[]) => {
     const todayStr = format(new Date(), 'yyyy-MM-dd');
     const history = [...progressHistory];
     const todayRecord = history.find(r => r.date === todayStr);
     
+    const completedTasks = currentTasks.filter(t => t.completed).length;
+    const totalTasks = currentTasks.length;
+
     if (todayRecord) {
       todayRecord.progress = newProgress;
+      todayRecord.completedTasks = completedTasks;
+      todayRecord.totalTasks = totalTasks;
     } else {
-      history.push({ date: todayStr, progress: newProgress });
+      history.push({ date: todayStr, progress: newProgress, completedTasks, totalTasks });
     }
     setProgressHistory(history);
   }, [progressHistory, setProgressHistory]);
@@ -119,7 +120,7 @@ export default function Home() {
     const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
     
     setGoals(prevGoals => prevGoals.map(goal => ({ ...goal, progress })));
-    updateProgressHistory(progress);
+    updateProgressHistory(progress, currentTasks);
 
   }, [setGoals, updateProgressHistory]);
 
@@ -140,7 +141,6 @@ export default function Home() {
     if (newDailyProgress === 100) {
       const todayStr = format(new Date(), 'yyyy-MM-dd');
       const todayRecord = progressHistory.find(r => r.date === todayStr);
-      // Celebrate only if it's the first time reaching 100% today
       if (!todayRecord || todayRecord.progress < 100) {
           setShowCelebration(true);
       }
@@ -218,7 +218,9 @@ export default function Home() {
                     onSettingsChange={handleUpdateNotificationSettings}
                 />;
       case 'progress':
-        return <ProgressView history={progressHistory} achievements={achievements} stats={userStats} />;
+        return <ProgressView history={progressHistory} stats={userStats} />;
+      case 'achievements':
+        return <AchievementsPage achievements={achievements} />;
       case 'dashboard':
       default:
         return (

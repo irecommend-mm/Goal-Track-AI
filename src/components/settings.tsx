@@ -3,10 +3,10 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Bell, Trash2 } from 'lucide-react';
+import { Bell, Brush, Check, Trash2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import type { NotificationSettings } from '@/lib/types';
-
+import { useTheme, themes } from './theme-provider';
 
 interface SettingsProps {
     resetData: () => void;
@@ -15,8 +15,40 @@ interface SettingsProps {
 }
 
 export default function Settings({ resetData, notificationSettings, onSettingsChange }: SettingsProps) {
+  const { theme, setTheme } = useTheme();
+
   return (
     <div className="mx-auto max-w-2xl space-y-6">
+      <Card>
+        <CardHeader>
+            <div className='flex items-center gap-3'>
+                <Brush className="h-6 w-6 text-primary" />
+                <CardTitle>Appearance</CardTitle>
+            </div>
+            <CardDescription>Customize the look and feel of the app.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {themes.map((t) => (
+                <div key={t.name} className="flex flex-col items-center gap-2">
+                    <Button
+                        variant={theme === t.name ? 'default' : 'outline'}
+                        onClick={() => setTheme(t.name)}
+                        className={`h-16 w-16 rounded-full border-2 ${theme === t.name ? 'border-ring' : 'border-transparent'}`}
+                    >
+                        <div className={`h-10 w-10 rounded-full ${t.name}-preview`}></div>
+                    </Button>
+                    <span className="text-sm font-medium">{t.label}</span>
+                </div>
+            ))}
+            <style jsx>{`
+                .theme-default-preview { background-color: hsl(218 91% 65%); }
+                .theme-forest-preview { background-color: hsl(140 40% 45%); }
+                .theme-ocean-preview { background-color: hsl(210 80% 55%); }
+                .theme-sunset-preview { background-color: hsl(30 90% 60%); }
+            `}</style>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
             <div className='flex items-center gap-3'>
@@ -52,6 +84,7 @@ export default function Settings({ resetData, notificationSettings, onSettingsCh
           </div>
         </CardContent>
       </Card>
+
       <Card>
         <CardHeader>
             <div className='flex items-center gap-3'>
