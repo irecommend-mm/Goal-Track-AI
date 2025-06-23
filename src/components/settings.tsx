@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Bell, Brush, Check, Trash2, AlertTriangle } from 'lucide-react';
+import { Bell, Brush, Trash2, AlertTriangle } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import type { NotificationSettings } from '@/lib/types';
 import { useTheme, themes } from './theme-provider';
@@ -80,9 +80,9 @@ export default function Settings({ resetData, notificationSettings, onSettingsCh
         <CardHeader>
             <div className='flex items-center gap-3'>
                 <Bell className="h-6 w-6 text-primary" />
-                <CardTitle>Notifications</CardTitle>
+                <CardTitle>System Notifications</CardTitle>
             </div>
-            <CardDescription>Manage your notification preferences.</CardDescription>
+            <CardDescription>Manage browser-level notification preferences.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between rounded-lg border p-4">

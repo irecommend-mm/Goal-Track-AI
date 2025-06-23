@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import type { Task, Goal, ProgressRecord, Achievement, UserStats, NotificationSettings } from '@/lib/types';
+import type { Task, Goal, ProgressRecord, Achievement, UserStats, NotificationSettings, AppNotification } from '@/lib/types';
 import useLocalStorage from '@/hooks/use-local-storage';
 import Header from '@/components/header';
 import Onboarding from '@/components/onboarding';
@@ -56,10 +56,21 @@ export default function Home() {
   const [achievements, setAchievements] = useLocalStorage<Achievement[]>('goal-track-ai-achievements', initialAchievements);
   const [userStats, setUserStats] = useLocalStorage<UserStats>('goal-track-ai-user-stats', { level: 1, xp: 0 });
   const [showCelebration, setShowCelebration] = useState(false);
-  const [notificationSettings, setNotificationSettings] = useLocalStorage<NotificationSettings>('goal-track-ai-notifications', initialNotificationSettings);
+  const [notificationSettings, setNotificationSettings] = useLocalStorage<NotificationSettings>('goal-track-ai-notification-settings', initialNotificationSettings);
+  const [notifications, setNotifications] = useLocalStorage<AppNotification[]>('goal-track-ai-notifications-list', []);
   const reminderTimeoutId = useRef<NodeJS.Timeout | null>(null);
 
   const { toast } = useToast();
+
+  const addNotification = useCallback((message: string, type: AppNotification['type']) => {
+    setNotifications(prev => [{
+        id: uuidv4(),
+        message,
+        type,
+        createdAt: new Date().toISOString(),
+        read: false
+    }, ...prev]);
+  }, [setNotifications]);
 
   const dailyProgress = useMemo(() => {
     const completedTasks = tasks.filter(t => t.completed).length;
@@ -75,10 +86,7 @@ export default function Home() {
         if (achievement && !achievement.unlocked) {
             achievement.unlocked = true;
             changed = true;
-            toast({
-                title: '🏆 Achievement Unlocked!',
-                description: `You've earned the "${achievement.name}" badge.`,
-            });
+            addNotification(`Achievement Unlocked: ${achievement.name}!`, 'achievement');
         }
     };
 
@@ -91,7 +99,7 @@ export default function Home() {
     if (changed) {
         setAchievements(newAchievements);
     }
-  }, [achievements, tasks, dailyProgress, momentumStreak, goals, setAchievements, toast]);
+  }, [achievements, tasks, dailyProgress, momentumStreak, goals, setAchievements, addNotification]);
 
   useEffect(() => {
     setIsClient(true);
@@ -190,7 +198,7 @@ export default function Home() {
             const newXp = prev.xp + XP_PER_TASK;
             const xpForNextLevel = LEVEL_UP_BASE_XP * prev.level;
             if (newXp >= xpForNextLevel) {
-                toast({ title: '🎉 Level Up!', description: `You've reached Level ${prev.level + 1}!` });
+                addNotification(`Congratulations, you've reached Level ${prev.level + 1}!`, 'levelup');
                 return { level: prev.level + 1, xp: newXp - xpForNextLevel };
             }
             return { ...prev, xp: newXp };
@@ -239,11 +247,16 @@ export default function Home() {
     setProgressHistory([]);
     setUserStats({ level: 1, xp: 0 });
     setNotificationSettings(initialNotificationSettings);
+    setNotifications([]);
     setIsOnboarded(false);
   };
 
   const handleUpdateNotificationSettings = (newSettings: Partial<NotificationSettings>) => {
     setNotificationSettings(prev => ({ ...prev, ...newSettings }));
+  };
+
+  const handleMarkNotificationsAsRead = () => {
+    setNotifications(prev => prev.map(n => ({...n, read: true})));
   };
 
   const renderView = () => {
@@ -283,7 +296,12 @@ export default function Home() {
       {isClient && !isOnboarded && <Onboarding onComplete={handleOnboardingComplete} />}
       {showCelebration && <Celebration onComplete={() => setShowCelebration(false)} />}
       <div className="flex flex-col min-h-screen bg-background">
-        <Header activeView={activeView} setActiveView={setActiveView} />
+        <Header 
+          activeView={activeView} 
+          setActiveView={setActiveView} 
+          notifications={notifications}
+          onMarkNotificationsAsRead={handleMarkNotificationsAsRead}
+        />
         <main className="flex-1 p-4 sm:p-6 md:p-8">
           {isClient ? renderView() : null}
         </main>

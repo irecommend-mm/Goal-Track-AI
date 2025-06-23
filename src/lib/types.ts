@@ -7,7 +7,7 @@ export interface Task {
 }
 
 export interface Goal {
-  id: string;
+  id:string;
   title: string;
   progress: number;
   type: 'weekly' | 'monthly';
@@ -36,4 +36,12 @@ export interface UserStats {
 export interface NotificationSettings {
     dailyReminders: boolean;
     weeklyReviewReminders: boolean;
+}
+
+export interface AppNotification {
+    id: string;
+    message: string;
+    type: 'achievement' | 'levelup' | 'reminder';
+    createdAt: string; // ISO string
+    read: boolean;
 }
