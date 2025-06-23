@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import type { Task, Goal, ProgressRecord, Achievement, UserStats, NotificationSettings } from '@/lib/types';
 import useLocalStorage from '@/hooks/use-local-storage';
 import Header from '@/components/header';
@@ -37,12 +37,13 @@ const initialAchievements: Achievement[] = [
 ];
 
 const initialNotificationSettings: NotificationSettings = {
-    dailyReminders: true,
+    dailyReminders: false,
     weeklyReviewReminders: true,
 };
 
 const XP_PER_TASK = 10;
 const LEVEL_UP_BASE_XP = 100;
+const REMINDER_HOUR = 20; // 8 PM
 
 export default function Home() {
   const [tasks, setTasks] = useLocalStorage<Task[]>('goal-track-ai-tasks', initialTasks);
@@ -56,6 +57,7 @@ export default function Home() {
   const [userStats, setUserStats] = useLocalStorage<UserStats>('goal-track-ai-user-stats', { level: 1, xp: 0 });
   const [showCelebration, setShowCelebration] = useState(false);
   const [notificationSettings, setNotificationSettings] = useLocalStorage<NotificationSettings>('goal-track-ai-notifications', initialNotificationSettings);
+  const reminderTimeoutId = useRef<NodeJS.Timeout | null>(null);
 
   const { toast } = useToast();
 
@@ -82,7 +84,7 @@ export default function Home() {
 
     if (tasks.some(t => t.completed)) unlock('first-step');
     if (tasks.filter(t => t.completed).length >= 10) unlock('task-master');
-    if (dailyProgress === 100) unlock('perfect-day');
+    if (dailyProgress === 100 && tasks.length > 0) unlock('perfect-day');
     if (momentumStreak >= 7) unlock('momentum-king');
     if (goals.some(g => g.progress === 100)) unlock('goal-getter');
 
@@ -96,6 +98,43 @@ export default function Home() {
     checkAndUnlockAchievements();
   }, [checkAndUnlockAchievements]);
   
+  useEffect(() => {
+    if (reminderTimeoutId.current) {
+      clearTimeout(reminderTimeoutId.current);
+    }
+
+    if (isClient && notificationSettings.dailyReminders && 'Notification' in window && Notification.permission === 'granted') {
+      const hasIncompleteTasks = tasks.some(t => !t.completed);
+      
+      if (hasIncompleteTasks) {
+        const now = new Date();
+        const reminderTime = new Date();
+        reminderTime.setHours(REMINDER_HOUR, 0, 0, 0);
+
+        if (now > reminderTime) {
+          // If it's past reminder time today, schedule for tomorrow
+          reminderTime.setDate(reminderTime.getDate() + 1);
+        }
+
+        const delay = reminderTime.getTime() - now.getTime();
+
+        reminderTimeoutId.current = setTimeout(() => {
+          new Notification('Goal Track AI Reminder', {
+            body: `You still have ${tasks.filter(t => !t.completed).length} tasks to complete today. Keep going!`,
+            icon: '/logo.png' 
+          });
+        }, delay);
+      }
+    }
+    
+    return () => {
+        if (reminderTimeoutId.current) {
+            clearTimeout(reminderTimeoutId.current);
+        }
+    };
+  }, [tasks, notificationSettings.dailyReminders, isClient]);
+
+
   const updateProgressHistory = useCallback((newProgress: number, currentTasks: Task[]) => {
     const todayStr = format(new Date(), 'yyyy-MM-dd');
     const history = [...progressHistory];
@@ -138,7 +177,7 @@ export default function Home() {
     updateGoals(newTasks);
 
     const newDailyProgress = newTasks.length > 0 ? Math.round((newTasks.filter(t => t.completed).length / newTasks.length) * 100) : 0;
-    if (newDailyProgress === 100) {
+    if (newDailyProgress === 100 && tasks.length > 0) {
       const todayStr = format(new Date(), 'yyyy-MM-dd');
       const todayRecord = progressHistory.find(r => r.date === todayStr);
       if (!todayRecord || todayRecord.progress < 100) {

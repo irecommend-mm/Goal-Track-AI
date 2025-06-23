@@ -3,10 +3,12 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Bell, Brush, Check, Trash2 } from 'lucide-react';
+import { Bell, Brush, Check, Trash2, AlertTriangle } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import type { NotificationSettings } from '@/lib/types';
 import { useTheme, themes } from './theme-provider';
+import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 interface SettingsProps {
     resetData: () => void;
@@ -16,6 +18,31 @@ interface SettingsProps {
 
 export default function Settings({ resetData, notificationSettings, onSettingsChange }: SettingsProps) {
   const { theme, setTheme } = useTheme();
+  const { toast } = useToast();
+
+  const handleDailyReminderChange = async (checked: boolean) => {
+    onSettingsChange({ dailyReminders: checked });
+    if (checked && 'Notification' in window) {
+      if (Notification.permission === 'default') {
+        const permission = await Notification.requestPermission();
+        if (permission === 'denied') {
+            toast({
+                variant: 'destructive',
+                title: 'Permission Denied',
+                description: 'You have blocked notifications. Please enable them in your browser settings to receive reminders.',
+            });
+            onSettingsChange({ dailyReminders: false });
+        }
+      } else if (Notification.permission === 'denied') {
+          toast({
+                variant: 'destructive',
+                title: 'Permission Denied',
+                description: 'You have blocked notifications. Please enable them in your browser settings to receive reminders.',
+            });
+            onSettingsChange({ dailyReminders: false });
+      }
+    }
+  }
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -62,14 +89,24 @@ export default function Settings({ resetData, notificationSettings, onSettingsCh
             <div>
               <p className="font-medium">Daily Reminders</p>
               <p className="text-sm text-muted-foreground">
-                Get a push notification every morning.
+                Get a push notification in the evening for incomplete tasks.
               </p>
             </div>
             <Switch
                 checked={notificationSettings.dailyReminders}
-                onCheckedChange={(checked) => onSettingsChange({ dailyReminders: checked })}
+                onCheckedChange={handleDailyReminderChange}
+                aria-label="Toggle daily reminders"
             />
           </div>
+           {typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'denied' && (
+              <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Notifications Blocked</AlertTitle>
+                  <AlertDescription>
+                      You have blocked notifications. To enable reminders, please update your browser settings.
+                  </AlertDescription>
+              </Alert>
+           )}
           <div className="flex items-center justify-between rounded-lg border p-4">
             <div>
               <p className="font-medium">Weekly Review Reminder</p>
@@ -80,6 +117,7 @@ export default function Settings({ resetData, notificationSettings, onSettingsCh
             <Switch
                 checked={notificationSettings.weeklyReviewReminders}
                 onCheckedChange={(checked) => onSettingsChange({ weeklyReviewReminders: checked })}
+                aria-label="Toggle weekly review reminders"
             />
           </div>
         </CardContent>
