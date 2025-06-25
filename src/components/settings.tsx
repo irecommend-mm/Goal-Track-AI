@@ -62,16 +62,16 @@ export default function Settings({ resetData, notificationSettings, onSettingsCh
             <CardDescription>{t('settings.appearanceDesc')}</CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {themes.map((t) => (
-                <div key={t.name} className="flex flex-col items-center gap-2">
+            {themes.map((themeItem) => (
+                <div key={themeItem.name} className="flex flex-col items-center gap-2">
                     <Button
-                        variant={theme === t.name ? 'default' : 'outline'}
-                        onClick={() => setTheme(t.name)}
-                        className={`h-16 w-16 rounded-full border-2 ${theme === t.name ? 'border-ring' : 'border-transparent'}`}
+                        variant={theme === themeItem.name ? 'default' : 'outline'}
+                        onClick={() => setTheme(themeItem.name)}
+                        className={`h-16 w-16 rounded-full border-2 ${theme === themeItem.name ? 'border-ring' : 'border-transparent'}`}
                     >
-                        <div className={`h-10 w-10 rounded-full ${t.name}-preview`}></div>
+                        <div className={`h-10 w-10 rounded-full ${themeItem.name}-preview`}></div>
                     </Button>
-                    <span className="text-sm font-medium">{t(`settings.themes.${t.label.toLowerCase()}`)}</span>
+                    <span className="text-sm font-medium">{t(`settings.themes.${themeItem.label.toLowerCase()}`)}</span>
                 </div>
             ))}
             <style jsx>{`
