@@ -9,12 +9,12 @@ import Dashboard from '@/components/dashboard';
 import WeeklyReview from '@/components/weekly-review';
 import Settings from '@/components/settings';
 import ProgressView from '@/components/progress-view';
-import AchievementsPage from '@/components/achievements-page';
 import Celebration from '@/components/celebration';
 import { v4 as uuidv4 } from 'uuid';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { Award, Check, Crown, Star, Trophy } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
 const initialTasks: Task[] = [
   { id: '1', text: 'Complete project proposal', completed: false },
@@ -48,7 +48,7 @@ const REMINDER_HOUR = 20; // 8 PM
 export default function Home() {
   const [tasks, setTasks] = useLocalStorage<Task[]>('goal-track-ai-tasks', initialTasks);
   const [goals, setGoals] = useLocalStorage<Goal[]>('goal-track-ai-goals', initialGoals);
-  const [activeView, setActiveView] = useState<'dashboard' | 'review' | 'settings' | 'progress' | 'achievements'>('dashboard');
+  const [activeView, setActiveView] = useState<'dashboard' | 'review' | 'settings' | 'progress'>('dashboard');
   const [isOnboarded, setIsOnboarded] = useLocalStorage('goal-track-ai-onboarded', false);
   const [isClient, setIsClient] = useState(false);
   const [momentumStreak, setMomentumStreak] = useLocalStorage('goal-track-ai-momentum', 5);
@@ -61,6 +61,7 @@ export default function Home() {
   const reminderTimeoutId = useRef<NodeJS.Timeout | null>(null);
 
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const addNotification = useCallback((message: string, type: AppNotification['type']) => {
     setNotifications(prev => [{
@@ -86,7 +87,7 @@ export default function Home() {
         if (achievement && !achievement.unlocked) {
             achievement.unlocked = true;
             changed = true;
-            addNotification(`Achievement Unlocked: ${achievement.name}!`, 'achievement');
+            addNotification(t('notifications.achievement', { name: achievement.name }), 'achievement');
         }
     };
 
@@ -99,7 +100,7 @@ export default function Home() {
     if (changed) {
         setAchievements(newAchievements);
     }
-  }, [achievements, tasks, dailyProgress, momentumStreak, goals, setAchievements, addNotification]);
+  }, [achievements, tasks, dailyProgress, momentumStreak, goals, setAchievements, addNotification, t]);
 
   useEffect(() => {
     setIsClient(true);
@@ -198,7 +199,7 @@ export default function Home() {
             const newXp = prev.xp + XP_PER_TASK;
             const xpForNextLevel = LEVEL_UP_BASE_XP * prev.level;
             if (newXp >= xpForNextLevel) {
-                addNotification(`Congratulations, you've reached Level ${prev.level + 1}!`, 'levelup');
+                addNotification(t('notifications.levelUp', { level: prev.level + 1 }), 'levelup');
                 return { level: prev.level + 1, xp: newXp - xpForNextLevel };
             }
             return { ...prev, xp: newXp };
@@ -269,11 +270,10 @@ export default function Home() {
                     resetData={handleResetData}
                     notificationSettings={notificationSettings}
                     onSettingsChange={handleUpdateNotificationSettings}
+                    achievements={achievements}
                 />;
       case 'progress':
         return <ProgressView history={progressHistory} stats={userStats} />;
-      case 'achievements':
-        return <AchievementsPage achievements={achievements} />;
       case 'dashboard':
       default:
         return (

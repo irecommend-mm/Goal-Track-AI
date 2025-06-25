@@ -1,0 +1,140 @@
+{
+  "header": {
+    "title": "Goal Track AI",
+    "nav": {
+      "dashboard": "Dashboard",
+      "progress": "Progress",
+      "review": "Weekly Review",
+      "settings": "Settings"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Recent updates and achievements.",
+      "empty": "No new notifications"
+    },
+    "language": "Language"
+  },
+  "onboarding": {
+    "step1_title": "Welcome to Goal Track AI!",
+    "step1_desc": "Let's get you set up to achieve your goals. This app helps you break down your ambitions into manageable tasks.",
+    "step2_title": "Track Your Progress",
+    "step2_desc": "Use the dashboard to see your daily tasks, monitor your weekly and monthly goals, and build your momentum.",
+    "step3_title": "Reflect and Adjust with AI",
+    "step3_desc": "Each week, reflect on your progress. Our AI will provide personalized suggestions to keep you on track.",
+    "next": "Next",
+    "getStarted": "Get Started"
+  },
+  "dashboard": {
+    "tasksTitle": "Today's Tasks",
+    "tasksCompleted": "{completed}/{total} completed",
+    "addTaskPlaceholder": "Add a new task or use the mic...",
+    "addTaskLabel": "Add task",
+    "recordTaskLabel": "Record task by voice",
+    "noTasks": "No tasks for today. Add one to get started!",
+    "summaryTitle": "Daily Summary",
+    "progressTitle": "Today's Progress",
+    "goalsTitle": "Your Goals",
+    "newGoal": "New Goal",
+    "createGoalTitle": "Create a New Goal",
+    "createGoalDesc": "What new ambition do you want to conquer? The AI will create an inspirational image for it.",
+    "goalTitleLabel": "Goal Title",
+    "goalTitlePlaceholder": "e.g., Run a 5k marathon",
+    "goalTypeLabel": "Goal Type",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "creating": "Creating...",
+    "createGoal": "Create Goal",
+    "goalProgress": "Progress",
+    "noGoals": "No goals yet. Add one to get started!",
+    "momentumTitle": "Momentum",
+    "dayStreak": "Day Streak",
+    "momentumDesc": "Keep it up to build a strong habit!"
+  },
+  "progress": {
+    "title": "Your Progress",
+    "description": "Visualize your accomplishments and growth over time.",
+    "level": "Level {level}",
+    "levelAndXp": "Level & XP",
+    "xp": "{xp} / {totalXp} XP",
+    "xpDesc": "Complete tasks to earn XP and level up!",
+    "chartsTitle": "Progress Charts",
+    "chartsDesc": "Your performance over different time periods.",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "heatmapTitle": "Productivity Heatmap",
+    "heatmapDesc": "Your daily task completion over the last few months."
+  },
+  "review": {
+    "title": "Weekly Reflective Review",
+    "description": "Take a moment to reflect on your past week and set your intentions for the next one.",
+    "reflectionLabel": "My reflection on last week's progress, challenges, and wins:",
+    "reflectionPlaceholder": "e.g., I was consistent with my workouts but struggled to find time for reading...",
+    "getSuggestions": "Get AI Suggestions",
+    "gettingSuggestions": "Getting Suggestions...",
+    "aiSuggestionsTitle": "Your AI-Powered Suggestions",
+    "errorTitle": "Error"
+  },
+  "settings": {
+    "appearanceTitle": "Appearance",
+    "appearanceDesc": "Customize the look and feel of the app.",
+    "themes": {
+      "default": "Default",
+      "forest": "Forest",
+      "ocean": "Ocean",
+      "sunset": "Sunset"
+    },
+    "notificationsTitle": "System Notifications",
+    "notificationsDesc": "Manage browser-level notification preferences.",
+    "dailyReminders": "Daily Reminders",
+    "dailyRemindersDesc": "Get a push notification in the evening for incomplete tasks.",
+    "weeklyReviewReminders": "Weekly Review Reminder",
+    "weeklyReviewRemindersDesc": "Get a reminder at the end of each week.",
+    "notificationsBlockedTitle": "Notifications Blocked",
+    "notificationsBlockedDesc": "You have blocked notifications. To enable reminders, please update your browser settings.",
+    "dataManagementTitle": "Data Management",
+    "dataManagementDesc": "Manage your application data.",
+    "resetData": "Reset All Data",
+    "resetDataDesc": "This will reset all tasks and goals to their initial state.",
+    "resetConfirmationTitle": "Are you absolutely sure?",
+    "resetConfirmationDesc": "This action cannot be undone. This will permanently delete all your tasks and goals data from this device.",
+    "cancel": "Cancel",
+    "continue": "Continue",
+    "achievementsTitle": "Achievements",
+    "achievementsDesc": "You've unlocked {unlockedCount} of {totalCount} badges. Keep up the great work!"
+  },
+  "notifications": {
+    "achievement": "Achievement Unlocked: {name}!",
+    "levelUp": "Congratulations, you've reached Level {level}!"
+  },
+  "toasts": {
+    "micError": {
+      "title": "Speech Recognition Error",
+      "desc": "An error occurred: {error}"
+    },
+    "micNotAllowed": {
+      "title": "Speech Recognition Error",
+      "desc": "Microphone access denied. Please allow it in your browser settings."
+    },
+    "micNotSupported": {
+      "title": "Browser Not Supported",
+      "desc": "Speech recognition is not available in your browser."
+    },
+    "micStartError": {
+      "title": "Could not start recording",
+      "desc": "Please check your microphone permissions and try again."
+    },
+    "goalTitleRequired": {
+      "title": "Goal Title Required",
+      "desc": "Please enter a title for your goal."
+    },
+    "goalImageError": {
+      "title": "AI Image Error",
+      "desc": "Could not generate an image for your goal. Please try again."
+    },
+    "notificationPermissionDenied": {
+        "title": "Permission Denied",
+        "desc": "You have blocked notifications. Please enable them in your browser settings to receive reminders."
+    }
+  }
+}

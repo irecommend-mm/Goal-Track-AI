@@ -1,31 +1,33 @@
 'use client';
 
-import { Target, LayoutDashboard, Star, Settings as SettingsIcon, BarChart3, Award, Bell } from 'lucide-react';
+import { Target, LayoutDashboard, Star, Settings as SettingsIcon, BarChart3, Bell, Languages } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { formatDistanceToNow } from 'date-fns';
 import type { AppNotification } from '@/lib/types';
+import { useTranslation } from '@/lib/i18n';
 
 
 interface HeaderProps {
-  activeView: 'dashboard' | 'review' | 'settings' | 'progress' | 'achievements';
-  setActiveView: (view: 'dashboard' | 'review' | 'settings' | 'progress' | 'achievements') => void;
+  activeView: 'dashboard' | 'review' | 'settings' | 'progress';
+  setActiveView: (view: 'dashboard' | 'review' | 'settings' | 'progress') => void;
   notifications: AppNotification[];
   onMarkNotificationsAsRead: () => void;
 }
 
-const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'progress', label: 'Progress', icon: BarChart3 },
-    { id: 'achievements', label: 'Achievements', icon: Award },
-    { id: 'review', label: 'Weekly Review', icon: Star },
-    { id: 'settings', label: 'Settings', icon: SettingsIcon },
+export default function Header({ activeView, setActiveView, notifications, onMarkNotificationsAsRead }: HeaderProps) {
+  const { t, setLanguage } = useTranslation();
+
+  const navItems = [
+    { id: 'dashboard', label: t('header.nav.dashboard'), icon: LayoutDashboard },
+    { id: 'progress', label: t('header.nav.progress'), icon: BarChart3 },
+    { id: 'review', label: t('header.nav.review'), icon: Star },
+    { id: 'settings', label: t('header.nav.settings'), icon: SettingsIcon },
 ] as const;
 
-
-export default function Header({ activeView, setActiveView, notifications, onMarkNotificationsAsRead }: HeaderProps) {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
@@ -33,7 +35,7 @@ export default function Header({ activeView, setActiveView, notifications, onMar
       <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-2">
           <Target className="h-7 w-7 text-primary" />
-          <h1 className="text-xl font-bold text-foreground">Goal Track AI</h1>
+          <h1 className="text-xl font-bold text-foreground">{t('header.title')}</h1>
         </div>
         <div className="flex items-center gap-2">
           <nav className="hidden items-center space-x-2 md:flex">
@@ -50,6 +52,23 @@ export default function Header({ activeView, setActiveView, notifications, onMar
             ))}
           </nav>
 
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                    <Languages className="h-5 w-5" />
+                    <span className="sr-only">{t('header.language')}</span>
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setLanguage('en')}>
+                    English
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLanguage('my')}>
+                    မြန်မာ
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <Popover onOpenChange={(open) => { if (open) onMarkNotificationsAsRead() }}>
             <PopoverTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">
@@ -60,15 +79,15 @@ export default function Header({ activeView, setActiveView, notifications, onMar
                             <span className="relative inline-flex h-2 w-2 rounded-full bg-accent"></span>
                         </span>
                     )}
-                    <span className="sr-only">Notifications</span>
+                    <span className="sr-only">{t('header.notifications.title')}</span>
                 </Button>
             </PopoverTrigger>
             <PopoverContent className="w-80">
               <div className="grid gap-4">
                   <div className="space-y-2">
-                    <h4 className="font-medium leading-none">Notifications</h4>
+                    <h4 className="font-medium leading-none">{t('header.notifications.title')}</h4>
                     <p className="text-sm text-muted-foreground">
-                      Recent updates and achievements.
+                      {t('header.notifications.description')}
                     </p>
                   </div>
                   <div className="grid max-h-80 gap-2 overflow-y-auto">
@@ -88,7 +107,7 @@ export default function Header({ activeView, setActiveView, notifications, onMar
                         </div>
                       ))
                     ) : (
-                      <p className="text-center text-sm text-muted-foreground py-4">No new notifications</p>
+                      <p className="text-center text-sm text-muted-foreground py-4">{t('header.notifications.empty')}</p>
                     )}
                   </div>
               </div>

@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { generateGoalImage } from '@/ai/flows/generate-goal-image';
+import { useTranslation } from '@/lib/i18n';
 
 
 interface DashboardProps {
@@ -33,6 +34,7 @@ export default function Dashboard({ tasks, goals, momentumStreak, dailyProgress,
   const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const { toast } = useToast();
+  const { t, language } = useTranslation();
   
   const [isAddGoalOpen, setIsAddGoalOpen] = useState(false);
   const [newGoalTitle, setNewGoalTitle] = useState('');
@@ -47,7 +49,7 @@ export default function Dashboard({ tasks, goals, momentumStreak, dailyProgress,
 
     const recognition = new SpeechRecognition();
     recognition.continuous = false;
-    recognition.lang = 'en-US';
+    recognition.lang = language === 'my' ? 'my-MM' : 'en-US';
     recognition.interimResults = false;
 
     recognition.onresult = (event) => {
@@ -59,11 +61,11 @@ export default function Dashboard({ tasks, goals, momentumStreak, dailyProgress,
       console.error('Speech recognition error', event.error);
       toast({
         variant: 'destructive',
-        title: 'Speech Recognition Error',
+        title: t('toasts.micError.title'),
         description:
           event.error === 'not-allowed'
-            ? 'Microphone access denied. Please allow it in your browser settings.'
-            : `An error occurred: ${event.error}`,
+            ? t('toasts.micNotAllowed.desc')
+            : t('toasts.micError.desc', {error: event.error}),
       });
     };
 
@@ -76,14 +78,14 @@ export default function Dashboard({ tasks, goals, momentumStreak, dailyProgress,
     return () => {
       recognitionRef.current?.stop();
     };
-  }, [toast]);
+  }, [toast, t, language]);
 
   const handleMicClick = () => {
     if (!recognitionRef.current) {
         toast({
             variant: 'destructive',
-            title: 'Browser Not Supported',
-            description: 'Speech recognition is not available in your browser.',
+            title: t('toasts.micNotSupported.title'),
+            description: t('toasts.micNotSupported.desc'),
         });
         return;
     }
@@ -97,8 +99,8 @@ export default function Dashboard({ tasks, goals, momentumStreak, dailyProgress,
           console.error("Could not start recognition", error)
            toast({
             variant: 'destructive',
-            title: 'Could not start recording',
-            description: 'Please check your microphone permissions and try again.',
+            title: t('toasts.micStartError.title'),
+            description: t('toasts.micStartError.desc'),
         });
       }
     }
@@ -116,8 +118,8 @@ export default function Dashboard({ tasks, goals, momentumStreak, dailyProgress,
     if (!newGoalTitle.trim()) {
         toast({
             variant: 'destructive',
-            title: 'Goal Title Required',
-            description: 'Please enter a title for your goal.',
+            title: t('toasts.goalTitleRequired.title'),
+            description: t('toasts.goalTitleRequired.desc'),
         });
         return;
     }
@@ -134,8 +136,8 @@ export default function Dashboard({ tasks, goals, momentumStreak, dailyProgress,
         console.error("Error generating goal image", error);
         toast({
             variant: 'destructive',
-            title: 'AI Image Error',
-            description: 'Could not generate an image for your goal. Please try again.',
+            title: t('toasts.goalImageError.title'),
+            description: t('toasts.goalImageError.desc'),
         });
     } finally {
         setIsCreatingGoal(false);
@@ -152,20 +154,20 @@ export default function Dashboard({ tasks, goals, momentumStreak, dailyProgress,
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <CheckCircle2 className="h-6 w-6 text-primary" />
-                    <CardTitle>Today's Tasks</CardTitle>
+                    <CardTitle>{t('dashboard.tasksTitle')}</CardTitle>
                 </div>
-                <CardDescription>{completedTasks}/{tasks.length} completed</CardDescription>
+                <CardDescription>{t('dashboard.tasksCompleted', {completed: completedTasks, total: tasks.length})}</CardDescription>
             </div>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleAddTaskSubmit} className="mb-4 flex gap-2">
               <Input
-                placeholder="Add a new task or use the mic..."
+                placeholder={t('dashboard.addTaskPlaceholder')}
                 value={newTaskText}
                 onChange={e => setNewTaskText(e.target.value)}
               />
-              <Button type="submit" size="icon" aria-label="Add task"><Plus /></Button>
-              <Button type="button" size="icon" variant={isRecording ? "destructive" : "outline"} onClick={handleMicClick} aria-label="Record task by voice">
+              <Button type="submit" size="icon" aria-label={t('dashboard.addTaskLabel')}><Plus /></Button>
+              <Button type="button" size="icon" variant={isRecording ? "destructive" : "outline"} onClick={handleMicClick} aria-label={t('dashboard.recordTaskLabel')}>
                 {isRecording ? <MicOff /> : <Mic />}
               </Button>
             </form>
@@ -194,7 +196,7 @@ export default function Dashboard({ tasks, goals, momentumStreak, dailyProgress,
                 </div>
               ))}
                 {tasks.length === 0 && (
-                    <p className="py-4 text-center text-sm text-muted-foreground">No tasks for today. Add one to get started!</p>
+                    <p className="py-4 text-center text-sm text-muted-foreground">{t('dashboard.noTasks')}</p>
                 )}
             </div>
           </CardContent>
@@ -205,13 +207,13 @@ export default function Dashboard({ tasks, goals, momentumStreak, dailyProgress,
             <CardHeader>
                 <div className="flex items-center gap-3">
                     <CalendarCheck className="h-6 w-6 text-primary" />
-                    <CardTitle>Daily Summary</CardTitle>
+                    <CardTitle>{t('dashboard.summaryTitle')}</CardTitle>
                 </div>
             </CardHeader>
             <CardContent>
                 <div>
                     <div className="mb-1 flex items-center justify-between">
-                        <p className="text-sm font-medium">Today's Progress</p>
+                        <p className="text-sm font-medium">{t('dashboard.progressTitle')}</p>
                         <p className="text-sm text-muted-foreground">{dailyProgress}%</p>
                     </div>
                     <Progress value={dailyProgress} aria-label="Daily task progress" />
@@ -223,40 +225,40 @@ export default function Dashboard({ tasks, goals, momentumStreak, dailyProgress,
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <TrendingUp className="h-6 w-6 text-primary" />
-                    <CardTitle>Your Goals</CardTitle>
+                    <CardTitle>{t('dashboard.goalsTitle')}</CardTitle>
                 </div>
                 <Dialog open={isAddGoalOpen} onOpenChange={setIsAddGoalOpen}>
                     <DialogTrigger asChild>
-                        <Button size="sm"><Plus className="h-4 w-4 mr-1" /> New Goal</Button>
+                        <Button size="sm"><Plus className="h-4 w-4 mr-1" /> {t('dashboard.newGoal')}</Button>
                     </DialogTrigger>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>Create a New Goal</DialogTitle>
+                            <DialogTitle>{t('dashboard.createGoalTitle')}</DialogTitle>
                             <DialogDescription>
-                                What new ambition do you want to conquer? The AI will create an inspirational image for it.
+                                {t('dashboard.createGoalDesc')}
                             </DialogDescription>
                         </DialogHeader>
                         <form onSubmit={handleAddNewGoalSubmit}>
                             <div className="grid gap-4 py-4">
                                 <div className="grid gap-2">
-                                    <Label htmlFor="goal-title">Goal Title</Label>
+                                    <Label htmlFor="goal-title">{t('dashboard.goalTitleLabel')}</Label>
                                     <Input 
                                         id="goal-title" 
-                                        placeholder="e.g., Run a 5k marathon" 
+                                        placeholder={t('dashboard.goalTitlePlaceholder')}
                                         value={newGoalTitle}
                                         onChange={(e) => setNewGoalTitle(e.target.value)}
                                     />
                                 </div>
                                 <div className="grid gap-2">
-                                    <Label>Goal Type</Label>
+                                    <Label>{t('dashboard.goalTypeLabel')}</Label>
                                     <RadioGroup defaultValue="weekly" value={newGoalType} onValueChange={(value: 'weekly' | 'monthly') => setNewGoalType(value)}>
                                         <div className="flex items-center space-x-2">
                                             <RadioGroupItem value="weekly" id="r-weekly" />
-                                            <Label htmlFor="r-weekly">Weekly</Label>
+                                            <Label htmlFor="r-weekly">{t('dashboard.weekly')}</Label>
                                         </div>
                                         <div className="flex items-center space-x-2">
                                             <RadioGroupItem value="monthly" id="r-monthly" />
-                                            <Label htmlFor="r-monthly">Monthly</Label>
+                                            <Label htmlFor="r-monthly">{t('dashboard.monthly')}</Label>
                                         </div>
                                     </RadioGroup>
                                 </div>
@@ -266,12 +268,12 @@ export default function Dashboard({ tasks, goals, momentumStreak, dailyProgress,
                                   {isCreatingGoal ? (
                                     <>
                                       <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                                      Creating...
+                                      {t('dashboard.creating')}
                                     </>
                                   ) : (
                                     <>
                                       <BrainCircuit className="mr-2 h-4 w-4" />
-                                      Create Goal
+                                      {t('dashboard.createGoal')}
                                     </>
                                   )}
                                 </Button>
@@ -300,7 +302,7 @@ export default function Dashboard({ tasks, goals, momentumStreak, dailyProgress,
                 </CardHeader>
                 <CardContent>
                     <div className="mb-1 flex items-center justify-between">
-                        <p className="text-sm font-medium">Progress</p>
+                        <p className="text-sm font-medium">{t('dashboard.goalProgress')}</p>
                         <p className="text-sm text-muted-foreground">{Math.round(goal.progress)}%</p>
                     </div>
                     <Progress value={goal.progress} aria-label={`${goal.title} progress`} />
@@ -308,7 +310,7 @@ export default function Dashboard({ tasks, goals, momentumStreak, dailyProgress,
               </Card>
             ))}
              {goals.length === 0 && (
-                <p className="py-4 text-center text-sm text-muted-foreground">No goals yet. Add one to get started!</p>
+                <p className="py-4 text-center text-sm text-muted-foreground">{t('dashboard.noGoals')}</p>
             )}
           </CardContent>
         </Card>
@@ -316,14 +318,14 @@ export default function Dashboard({ tasks, goals, momentumStreak, dailyProgress,
           <CardHeader>
              <div className="flex items-center gap-3">
                 <Flame className="h-6 w-6 text-accent" />
-                <CardTitle>Momentum</CardTitle>
+                <CardTitle>{t('dashboard.momentumTitle')}</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-center gap-4 text-center">
                 <div>
                     <p className="text-4xl font-bold text-accent">{momentumStreak}</p>
-                    <p className="text-sm text-muted-foreground">Day Streak</p>
+                    <p className="text-sm text-muted-foreground">{t('dashboard.dayStreak')}</p>
                 </div>
                 <div className="flex gap-1">
                     {Array.from({ length: 7 }).map((_, i) => (
@@ -331,7 +333,7 @@ export default function Dashboard({ tasks, goals, momentumStreak, dailyProgress,
                     ))}
                 </div>
             </div>
-            <CardDescription className="mt-4 text-center">Keep it up to build a strong habit!</CardDescription>
+            <CardDescription className="mt-4 text-center">{t('dashboard.momentumDesc')}</CardDescription>
           </CardContent>
         </Card>
       </div>

@@ -9,6 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { getAiSuggestions, AIActionState } from '@/app/actions';
 import { BrainCircuit, Lightbulb, LoaderCircle, AlertTriangle } from 'lucide-react';
 import { useActionState, useEffect, useRef } from 'react';
+import { useTranslation } from '@/lib/i18n';
 
 interface WeeklyReviewProps {
   goals: Goal[];
@@ -16,18 +17,19 @@ interface WeeklyReviewProps {
 
 function SubmitButton() {
     const { pending } = useFormStatus();
+    const { t } = useTranslation();
 
     return (
         <Button type="submit" disabled={pending} className="w-full sm:w-auto">
             {pending ? (
                 <>
                     <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                    Getting Suggestions...
+                    {t('review.gettingSuggestions')}
                 </>
             ) : (
                 <>
                     <BrainCircuit className="mr-2 h-4 w-4" />
-                    Get AI Suggestions
+                    {t('review.getSuggestions')}
                 </>
             )}
         </Button>
@@ -35,6 +37,7 @@ function SubmitButton() {
 }
 
 export default function WeeklyReview({ goals }: WeeklyReviewProps) {
+  const { t } = useTranslation();
   const initialState: AIActionState = { message: '' };
   const [state, formAction] = useActionState(getAiSuggestions, initialState);
   const formRef = useRef<HTMLFormElement>(null);
@@ -51,21 +54,21 @@ export default function WeeklyReview({ goals }: WeeklyReviewProps) {
     <div className="mx-auto max-w-2xl">
       <Card>
         <CardHeader>
-          <CardTitle>Weekly Reflective Review</CardTitle>
+          <CardTitle>{t('review.title')}</CardTitle>
           <CardDescription>
-            Take a moment to reflect on your past week and set your intentions for the next one.
+            {t('review.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form action={formAction} ref={formRef} className="space-y-6">
             <div>
               <label htmlFor="weeklyReflection" className="mb-2 block text-sm font-medium">
-                My reflection on last week's progress, challenges, and wins:
+                {t('review.reflectionLabel')}
               </label>
               <Textarea
                 id="weeklyReflection"
                 name="weeklyReflection"
-                placeholder="e.g., I was consistent with my workouts but struggled to find time for reading..."
+                placeholder={t('review.reflectionPlaceholder')}
                 rows={6}
                 required
               />
@@ -77,7 +80,7 @@ export default function WeeklyReview({ goals }: WeeklyReviewProps) {
             {state.error && (
               <Alert variant="destructive" className="mt-4">
                 <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Error</AlertTitle>
+                <AlertTitle>{t('review.errorTitle')}</AlertTitle>
                 <AlertDescription>{state.message}</AlertDescription>
               </Alert>
             )}
@@ -86,7 +89,7 @@ export default function WeeklyReview({ goals }: WeeklyReviewProps) {
           {state.suggestion && (
             <Alert className="mt-6">
               <Lightbulb className="h-4 w-4" />
-              <AlertTitle>Your AI-Powered Suggestions</AlertTitle>
+              <AlertTitle>{t('review.aiSuggestionsTitle')}</AlertTitle>
               <AlertDescription>
                 <p className="whitespace-pre-wrap">{state.suggestion}</p>
               </AlertDescription>

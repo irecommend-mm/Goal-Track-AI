@@ -12,30 +12,33 @@ import {
 import { Button } from '@/components/ui/button';
 import { Target, CheckCircle, BrainCircuit } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { useTranslation } from '@/lib/i18n';
 
 interface OnboardingProps {
   onComplete: () => void;
 }
 
-const steps = [
-  {
-    icon: Target,
-    title: 'Welcome to Goal Track AI!',
-    description: "Let's get you set up to achieve your goals. This app helps you break down your ambitions into manageable tasks.",
-  },
-  {
-    icon: CheckCircle,
-    title: 'Track Your Progress',
-    description: 'Use the dashboard to see your daily tasks, monitor your weekly and monthly goals, and build your momentum.',
-  },
-  {
-    icon: BrainCircuit,
-    title: 'Reflect and Adjust with AI',
-    description: 'Each week, reflect on your progress. Our AI will provide personalized suggestions to keep you on track.',
-  },
-];
-
 export default function Onboarding({ onComplete }: OnboardingProps) {
+  const { t } = useTranslation();
+
+  const steps = [
+    {
+      icon: Target,
+      title: t('onboarding.step1_title'),
+      description: t('onboarding.step1_desc'),
+    },
+    {
+      icon: CheckCircle,
+      title: t('onboarding.step2_title'),
+      description: t('onboarding.step2_desc'),
+    },
+    {
+      icon: BrainCircuit,
+      title: t('onboarding.step3_title'),
+      description: t('onboarding.step3_desc'),
+    },
+  ];
+  
   const [step, setStep] = useState(0);
   const isLastStep = step === steps.length - 1;
   
@@ -65,7 +68,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
         </div>
         <DialogFooter>
           <Button onClick={handleNext} className="w-full">
-            {isLastStep ? 'Get Started' : 'Next'}
+            {isLastStep ? t('onboarding.getStarted') : t('onboarding.next')}
           </Button>
         </DialogFooter>
       </DialogContent>

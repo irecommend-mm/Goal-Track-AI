@@ -10,6 +10,7 @@ import { format, subDays, eachDayOfInterval, eachMonthOfInterval, getDaysInMonth
 import { useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ProductivityHeatmap from './productivity-heatmap';
+import { useTranslation } from '@/lib/i18n';
 
 
 interface ProgressViewProps {
@@ -27,7 +28,7 @@ const chartConfig = {
 const LEVEL_UP_BASE_XP = 100;
 
 export default function ProgressView({ history, stats }: ProgressViewProps) {
-
+  const { t } = useTranslation();
   const weeklyChartData = useMemo(() => {
     const last7Days = eachDayOfInterval({
       start: subDays(new Date(), 6),
@@ -86,38 +87,38 @@ export default function ProgressView({ history, stats }: ProgressViewProps) {
         <CardHeader>
             <div className='flex items-center gap-3'>
                 <BarChart3 className="h-6 w-6 text-primary" />
-                <CardTitle>Your Progress</CardTitle>
+                <CardTitle>{t('progress.title')}</CardTitle>
             </div>
-            <CardDescription>Visualize your accomplishments and growth over time.</CardDescription>
+            <CardDescription>{t('progress.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
             <Card>
                 <CardHeader>
                     <div className='flex items-center gap-3'>
                         <TrendingUp className="h-5 w-5 text-primary" />
-                        <CardTitle className="text-xl">Level & XP</CardTitle>
+                        <CardTitle className="text-xl">{t('progress.levelAndXp')}</CardTitle>
                     </div>
                 </CardHeader>
                 <CardContent>
                     <div className="flex items-center justify-between mb-2">
-                        <p className="font-bold text-lg">Level {stats.level}</p>
-                        <p className="text-sm text-muted-foreground">{stats.xp} / {xpForNextLevel} XP</p>
+                        <p className="font-bold text-lg">{t('progress.level', { level: stats.level })}</p>
+                        <p className="text-sm text-muted-foreground">{t('progress.xp', { xp: stats.xp, totalXp: xpForNextLevel })}</p>
                     </div>
                     <Progress value={levelProgress} />
-                    <p className="text-xs text-muted-foreground mt-2">Complete tasks to earn XP and level up!</p>
+                    <p className="text-xs text-muted-foreground mt-2">{t('progress.xpDesc')}</p>
                 </CardContent>
             </Card>
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-xl">Progress Charts</CardTitle>
-                    <CardDescription>Your performance over different time periods.</CardDescription>
+                    <CardTitle className="text-xl">{t('progress.chartsTitle')}</CardTitle>
+                    <CardDescription>{t('progress.chartsDesc')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Tabs defaultValue="weekly" className="w-full">
                         <TabsList className="grid w-full grid-cols-3">
-                            <TabsTrigger value="weekly">Weekly</TabsTrigger>
-                            <TabsTrigger value="monthly">Monthly</TabsTrigger>
-                            <TabsTrigger value="yearly">Yearly</TabsTrigger>
+                            <TabsTrigger value="weekly">{t('progress.weekly')}</TabsTrigger>
+                            <TabsTrigger value="monthly">{t('progress.monthly')}</TabsTrigger>
+                            <TabsTrigger value="yearly">{t('progress.yearly')}</TabsTrigger>
                         </TabsList>
                         <TabsContent value="weekly" className="mt-4">
                             <ChartContainer config={chartConfig} className="h-[200px] w-full">
@@ -162,9 +163,9 @@ export default function ProgressView({ history, stats }: ProgressViewProps) {
         <CardHeader>
           <div className='flex items-center gap-3'>
             <CalendarDays className="h-6 w-6 text-primary" />
-            <CardTitle>Productivity Heatmap</CardTitle>
+            <CardTitle>{t('progress.heatmapTitle')}</CardTitle>
           </div>
-          <CardDescription>Your daily task completion over the last few months.</CardDescription>
+          <CardDescription>{t('progress.heatmapDesc')}</CardDescription>
         </CardHeader>
         <CardContent className="flex justify-center">
             <ProductivityHeatmap history={history} />
